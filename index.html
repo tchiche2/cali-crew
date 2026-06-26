@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cali Crew</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap');
+  :root {
+    --bg:#0c0e14; --card:#13161f; --border:#1e2230;
+    --accent:#e8500a; --blue:#1a7fc4; --green:#22c55e;
+    --muted:#5a6078; --text:#e8eaf0; --dim:#9aa0b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:80px;}
+
+  /* ONBOARDING */
+  #onboarding{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;text-align:center;}
+  .ob-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:44px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .ob-logo span{color:var(--accent);}
+  .ob-sub{color:var(--muted);font-size:14px;margin-bottom:48px;}
+  .ob-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px;align-self:flex-start;width:100%;}
+  .ob-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:28px;}
+  .ob-input:focus{border-color:var(--accent);}
+  .ob-btn{width:100%;padding:18px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;}
+  .ob-btn:hover{opacity:.88;}
+  .ob-note{margin-top:20px;font-size:13px;color:var(--muted);line-height:1.6;}
+
+  /* BOTTOM NAV */
+  #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;}
+  .nav-btn{flex:1;padding:14px 0 12px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s;}
+  .nav-icon{font-size:20px;}
+  .nav-btn.active{color:var(--accent);}
+
+  /* PAGES */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:22px 20px 16px;border-bottom:1px solid var(--border);}
+  .logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;letter-spacing:1px;}
+  .logo span{color:var(--accent);}
+  .user-badge{font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--muted);text-transform:uppercase;}
+  .user-badge strong{color:var(--accent);}
+  .date-bar{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .date-str{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+  .streak-badge{font-family:'Barlow Condensed',sans-serif;font-size:14px;background:rgba(232,80,10,.12);color:var(--accent);border:1px solid rgba(232,80,10,.25);border-radius:20px;padding:4px 12px;}
+
+  /* CREW */
+  .section-lbl{padding:20px 20px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+  #crew-list{padding:0 20px;display:flex;flex-direction:column;gap:8px;}
+  .member-row{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;transition:border-color .3s;}
+  .member-row.is-me{border-color:var(--accent);background:rgba(232,80,10,.04);}
+  .member-row.m-done{border-color:var(--green);background:rgba(34,197,94,.04);}
+  .m-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;flex-shrink:0;}
+  .m-info{flex:1;}
+  .m-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;}
+  .m-status{font-size:12px;color:var(--muted);margin-top:2px;}
+  .m-status.ok{color:var(--green);}
+  .m-time{font-size:11px;color:var(--muted);}
+  .me-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--accent);background:rgba(232,80,10,.12);border-radius:6px;padding:2px 8px;letter-spacing:1px;}
+
+  .boost-banner{margin:12px 20px;padding:13px 16px;background:rgba(26,127,196,.1);border:1px solid rgba(26,127,196,.3);border-radius:10px;font-size:14px;color:#7ec8f5;line-height:1.5;display:none;}
+  .boost-banner.show{display:block;}
+  .divider{height:1px;background:var(--border);margin:16px 20px;}
+
+  /* TABS */
+  .tabs{display:flex;margin:4px 20px 16px;gap:8px;}
+  .tab{flex:1;padding:11px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .2s;text-align:center;}
+  .tab.active-haut{border-color:var(--accent);color:var(--accent);background:rgba(232,80,10,.08);}
+  .tab.active-bas{border-color:var(--blue);color:var(--blue);background:rgba(26,127,196,.08);}
+
+  /* EXERCISES */
+  .exercises{padding:0 20px;display:flex;flex-direction:column;gap:8px;}
+  .exo-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .exo-card.open .exo-tip{display:block;}
+  .exo-card.exo-done{opacity:.4;}
+  .exo-num-s{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;min-width:28px;color:var(--muted);}
+  .exo-num-s.c-haut{color:var(--accent);}
+  .exo-num-s.c-bas{color:var(--blue);}
+  .exo-info{flex:1;}
+  .exo-name-s{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;}
+  .exo-detail-s{font-size:12px;color:var(--muted);margin-top:2px;}
+  .exo-tip{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic;line-height:1.4;display:none;}
+  .chk{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0;}
+  .exo-card.exo-done .chk{background:var(--green);border-color:var(--green);}
+
+  /* VALIDATE */
+  .validate-wrap{padding:20px;}
+  .validate-btn{width:100%;padding:18px;border-radius:12px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+  .validate-btn.ready{background:var(--accent);color:white;}
+  .validate-btn.not-ready{background:var(--border);color:var(--muted);cursor:default;}
+  .validate-btn.validated{background:rgba(34,197,94,.15);color:var(--green);border:1.5px solid var(--green);cursor:default;}
+
+  /* INVITE */
+  .invite-wrap{padding:0 20px 16px;}
+  .invite-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .invite-info{flex:1;}
+  .invite-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;text-transform:uppercase;}
+  .invite-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+  .copy-btn{background:var(--border);border:none;border-radius:8px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:13px;text-transform:uppercase;padding:8px 14px;cursor:pointer;white-space:nowrap;}
+  .copy-btn:hover{background:#2a2f42;color:var(--text);}
+  .reset-link{text-align:center;padding:8px;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;opacity:.5;}
+
+  /* CALENDAR PAGE */
+  .cal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 20px 16px;border-bottom:1px solid var(--border);}
+  .cal-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;text-transform:uppercase;}
+  .cal-logo span{color:var(--accent);}
+  .cal-period{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:1px;color:var(--text);}
+  .cal-nav{display:flex;gap:6px;align-items:center;}
+  .cal-nav-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--dim);font-size:16px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 20px 0;}
+  .stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;}
+  .stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:var(--accent);}
+  .stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+
+  .cal-view-toggle{display:flex;margin:16px 20px 0;gap:8px;}
+  .cal-view-btn{flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;text-align:center;}
+  .cal-view-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(232,80,10,.08);}
+
+  /* MONTH GRID */
+  .month-grid-wrap{padding:16px 20px 0;}
+  .month-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+  .month-dow{font-family:'Barlow Condensed',sans-serif;font-size:11px;text-align:center;color:var(--muted);text-transform:uppercase;padding:4px 0;}
+  .month-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;position:relative;}
+  .cal-day.cal-empty{opacity:0;pointer-events:none;}
+  .cal-day.cal-today{border:1.5px solid var(--accent);color:var(--accent);}
+  .cal-day.cal-done{background:rgba(34,197,94,.2);color:var(--green);}
+  .cal-day.cal-done.slot-haut::after{content:'💪';position:absolute;bottom:1px;right:2px;font-size:7px;}
+  .cal-day.cal-done.slot-bas::after{content:'🦵';position:absolute;bottom:1px;right:2px;font-size:7px;}
+  .cal-day.cal-future{color:var(--muted);opacity:.3;}
+  .cal-day.cal-miss{color:var(--muted);opacity:.4;}
+
+  /* YEAR GRID */
+  .year-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px 0;}
+  .mini-month{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;}
+  .mini-month-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--dim);margin-bottom:6px;text-align:center;}
+  .mini-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+  .mini-day{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:7px;}
+  .mini-day.mini-done{background:rgba(34,197,94,.35);}
+  .mini-day.mini-today{background:rgba(232,80,10,.3);}
+  .mini-day.mini-empty{opacity:0;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0c1a10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;padding:12px 28px;border-radius:50px;transition:transform .3s;pointer-events:none;white-space:nowrap;z-index:999;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboarding" style="display:none">
+  <div class="ob-logo">Cali <span>Crew</span></div>
+  <div class="ob-sub">Sol uniquement · Poids de corps · Entre routiers</div>
+  <div class="ob-label">Ton prénom</div>
+  <input class="ob-input" id="ob-name" type="text" placeholder="Ex : Tony" maxlength="16" autocomplete="off">
+  <button class="ob-btn" onclick="saveUser()">Commencer</button>
+  <p class="ob-note">Partage le lien à tes collègues — ils entrent leur prénom et rejoignent le groupe automatiquement.</p>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+  <!-- PAGE AUJOURD'HUI -->
+  <div id="page-today" class="page active">
+    <header>
+      <div class="logo">Cali <span>Crew</span></div>
+      <div class="user-badge">👤 <strong id="header-name"></strong></div>
+    </header>
+    <div class="date-bar">
+      <div class="date-str" id="date-str"></div>
+      <div class="streak-badge" id="streak-badge">🔥 0 jour</div>
+    </div>
+
+    <div class="section-lbl">👥 Crew</div>
+    <div id="crew-list"></div>
+    <div class="boost-banner" id="boost-banner">💪 <span id="boost-text"></span> — à toi !</div>
+
+    <div class="divider"></div>
+    <div class="section-lbl">Ma séance du jour</div>
+    <div class="tabs">
+      <div class="tab active-haut" id="tab-haut" onclick="switchTab('haut')">💪 Haut du corps</div>
+      <div class="tab" id="tab-bas" onclick="switchTab('bas')">🦵 Bas du corps</div>
+    </div>
+
+    <!-- HAUT DU CORPS — SOL UNIQUEMENT -->
+    <div id="panel-haut">
+      <div class="exercises">
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h1">
+          <div class="exo-num-s c-haut">01</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Pompes classiques</div>
+            <div class="exo-detail-s">3 × 12–15 reps · 60s repos</div>
+            <div class="exo-tip">Corps aligné talons–nuque, gainage actif. Descente lente 3s pour progresser.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h1')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h2">
+          <div class="exo-num-s c-haut">02</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Pompes serrées (triceps)</div>
+            <div class="exo-detail-s">3 × 10 reps · 60s repos</div>
+            <div class="exo-tip">Mains sous les épaules, coudes collés au corps. Cible triceps et bas des pecs.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h2')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h3">
+          <div class="exo-num-s c-haut">03</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Pompes larges (pecs)</div>
+            <div class="exo-detail-s">3 × 10 reps · 60s repos</div>
+            <div class="exo-tip">Mains plus larges que les épaules. Sollicite davantage les pectoraux externes.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h3')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h4">
+          <div class="exo-num-s c-haut">04</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Pike push-ups (épaules)</div>
+            <div class="exo-detail-s">3 × 8–10 reps · 60s repos</div>
+            <div class="exo-tip">En V inversé hanches hautes, descend la tête vers le sol entre les mains. Simule le développé militaire — 100% au sol.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h4')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h5">
+          <div class="exo-num-s c-haut">05</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Superman (bas du dos)</div>
+            <div class="exo-detail-s">3 × 12 reps · 45s repos</div>
+            <div class="exo-tip">Ventre au sol, bras tendus devant. Lève bras et jambes en même temps, maintiens 2s. Crucial pour le dos soumis à la conduite.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h5')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h6">
+          <div class="exo-num-s c-haut">06</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Planche avant</div>
+            <div class="exo-detail-s">3 × 30–45s · 45s repos</div>
+            <div class="exo-tip">Sur avant-bras et pointes de pieds. Corps rigide, hanches neutres. Respire lentement. Objectif 60s.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h6')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="h7">
+          <div class="exo-num-s c-haut">07</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Planche latérale</div>
+            <div class="exo-detail-s">3 × 20–30s / côté · 45s repos</div>
+            <div class="exo-tip">Sur avant-bras, côté du pied. Corps aligné, hanche pas affaissée. Obliques + lombaires.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'h7')"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAS DU CORPS — SOL UNIQUEMENT -->
+    <div id="panel-bas" style="display:none">
+      <div class="exercises">
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b1">
+          <div class="exo-num-s c-bas">01</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Squats</div>
+            <div class="exo-detail-s">3 × 15–20 reps · 60s repos</div>
+            <div class="exo-tip">Pieds largeur d'épaules, cuisses parallèles, dos droit. Descente lente 3s, montée explosive.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b1')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b2">
+          <div class="exo-num-s c-bas">02</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Fentes alternées</div>
+            <div class="exo-detail-s">3 × 10 / jambe · 60s repos</div>
+            <div class="exo-tip">Grand pas en avant, genou arrière effleure le sol. Quadriceps, fessiers, équilibre. Alterne gauche-droite.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b2')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b3">
+          <div class="exo-num-s c-bas">03</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Squat sumo</div>
+            <div class="exo-detail-s">3 × 15 reps · 60s repos</div>
+            <div class="exo-tip">Pieds très écartés, pointes vers l'extérieur. Adducteurs + fessiers. Descente lente, genou dans l'axe du pied.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b3')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b4">
+          <div class="exo-num-s c-bas">04</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Pont fessier</div>
+            <div class="exo-detail-s">3 × 15–20 reps · 45s repos</div>
+            <div class="exo-tip">Sur le dos, genoux pliés, pieds à plat au sol. Monte les hanches, serre les fessiers fort en haut, maintiens 2s. Compense la position assise prolongée.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b4')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b5">
+          <div class="exo-num-s c-bas">05</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Relevés de jambes</div>
+            <div class="exo-detail-s">3 × 12 reps · 45s repos</div>
+            <div class="exo-tip">Sur le dos, jambes tendues. Lève-les à 90° lentement, redescend sans toucher le sol. Abdos bas + flexeurs de hanche.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b5')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b6">
+          <div class="exo-num-s c-bas">06</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Donkey kicks</div>
+            <div class="exo-detail-s">3 × 15 / jambe · 45s repos</div>
+            <div class="exo-tip">À quatre pattes au sol, genou fléchi à 90°. Pousse le talon vers le plafond en contractant le fessier. Isolation fessier + stabilisation lombaire.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b6')"></button>
+        </div>
+        <div class="exo-card" onclick="toggleCard(this)" data-id="b7">
+          <div class="exo-num-s c-bas">07</div>
+          <div class="exo-info">
+            <div class="exo-name-s">Squat isométrique</div>
+            <div class="exo-detail-s">3 × 30–45s · 60s repos</div>
+            <div class="exo-tip">Dos droit, genoux à 90°, comme assis sur une chaise invisible. Tiens la position. Quadriceps en feu garanti.</div>
+          </div>
+          <button class="chk" onclick="toggleExo(event,'b7')"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="validate-wrap">
+      <button class="validate-btn not-ready" id="validate-btn" onclick="validateSession()">✓ Valider ma séance</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="invite-wrap">
+      <div class="invite-box">
+        <div class="invite-info">
+          <div class="invite-title">Inviter un collègue</div>
+          <div class="invite-sub">Envoie ce lien — il entre son prénom et rejoint le groupe</div>
+        </div>
+        <button class="copy-btn" onclick="copyLink()">Copier le lien</button>
+      </div>
+    </div>
+    <div class="reset-link" onclick="resetUser()">Changer de compte</div>
+  </div>
+
+  <!-- PAGE CALENDRIER -->
+  <div id="page-cal" class="page">
+    <div class="cal-header">
+      <div class="cal-logo">Cali <span>Crew</span></div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calMove(-1)">‹</button>
+        <div class="cal-period" id="cal-period"></div>
+        <button class="cal-nav-btn" onclick="calMove(1)">›</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">Série max</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-month">0</div><div class="stat-lbl">Ce mois</div></div>
+    </div>
+
+    <div class="cal-view-toggle">
+      <div class="cal-view-btn active" id="view-month" onclick="setCalView('month')">Mois</div>
+      <div class="cal-view-btn" id="view-year" onclick="setCalView('year')">Année</div>
+    </div>
+
+    <div id="cal-month-view">
+      <div class="month-grid-wrap">
+        <div class="month-dow-row">
+          <div class="month-dow">L</div><div class="month-dow">M</div><div class="month-dow">M</div>
+          <div class="month-dow">J</div><div class="month-dow">V</div><div class="month-dow">S</div>
+          <div class="month-dow">D</div>
+        </div>
+        <div class="month-days" id="month-days"></div>
+      </div>
+    </div>
+
+    <div id="cal-year-view" style="display:none">
+      <div class="year-grid" id="year-grid"></div>
+    </div>
+  </div>
+
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-today" onclick="gotoPage('today')">
+      <span class="nav-icon">🏠</span>Aujourd'hui
+    </button>
+    <button class="nav-btn" id="nav-cal" onclick="gotoPage('cal')">
+      <span class="nav-icon">📅</span>Calendrier
+    </button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const ROOM_KEY = 'cali-crew-v2';
+const USER_KEY = 'cali-crew-user';
+const SLOT_KEY = 'cali-crew-slot';
+const EXO_KEY  = 'cali-crew-exos';
+const TOTAL    = 7;
+
+const COLORS = [
+  {bg:'rgba(232,80,10,.15)',  fg:'#e8500a'},
+  {bg:'rgba(26,127,196,.15)', fg:'#1a7fc4'},
+  {bg:'rgba(168,85,247,.15)', fg:'#a855f7'},
+  {bg:'rgba(245,158,11,.15)', fg:'#f59e0b'},
+  {bg:'rgba(236,72,153,.15)', fg:'#ec4899'},
+  {bg:'rgba(20,184,166,.15)', fg:'#14b8a6'},
+  {bg:'rgba(99,102,241,.15)', fg:'#6366f1'},
+  {bg:'rgba(251,146,60,.15)', fg:'#fb923c'},
+];
+
+let myName='', mySlot='haut', checkedExos=new Set(), pollTimer=null;
+let calView='month', calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+
+window.onload = () => {
+  myName = localStorage.getItem(USER_KEY)||'';
+  if (!myName) document.getElementById('onboarding').style.display='flex';
+  else startApp();
+};
+
+function saveUser() {
+  const n = document.getElementById('ob-name').value.trim();
+  if (!n) return;
+  localStorage.setItem(USER_KEY, n);
+  myName = n;
+  document.getElementById('onboarding').style.display='none';
+  startApp();
+}
+
+function startApp() {
+  document.getElementById('app').style.display='block';
+  document.getElementById('header-name').textContent = myName;
+  mySlot = localStorage.getItem(SLOT_KEY)||'haut';
+  const saved = JSON.parse(localStorage.getItem(EXO_KEY+'_'+today())||'[]');
+  checkedExos = new Set(saved);
+  renderCheckedExos();
+  switchTab(mySlot, false);
+  setDateBar();
+  poll();
+  pollTimer = setInterval(poll, 8000);
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtTime(iso) { return iso ? new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : ''; }
+function setDateBar() {
+  const d=new Date();
+  const D=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const M=['jan','fév','mars','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+  document.getElementById('date-str').textContent=`${D[d.getDay()]} ${d.getDate()} ${M[d.getMonth()]}`;
+}
+
+async function getRoom() {
+  try { const r=await window.storage.get(ROOM_KEY,true); return r?JSON.parse(r.value):{}; }
+  catch(e){ return {}; }
+}
+async function setRoom(r) { await window.storage.set(ROOM_KEY,JSON.stringify(r),true); }
+
+async function poll() {
+  const room = await getRoom();
+  renderCrew(room);
+}
+
+function renderCrew(room) {
+  const t = today();
+  const list = document.getElementById('crew-list');
+  list.innerHTML='';
+
+  // Build ordered list: me first, then alphabetical
+  const others = Object.keys(room).filter(k=>k!==myName).sort();
+  const order = [myName, ...others];
+
+  const myDone = room[myName]&&room[myName].date===t;
+  const boostNames = [];
+
+  order.forEach((name, idx) => {
+    const entry = room[name];
+    const done = entry&&entry.date===t;
+    const isMe = name===myName;
+    const col = COLORS[idx % COLORS.length];
+
+    if (!isMe && done) boostNames.push(name);
+
+    const row=document.createElement('div');
+    row.className='member-row'+(isMe?' is-me':'')+(done?' m-done':'');
+
+    const av=document.createElement('div');
+    av.className='m-av';
+    av.style.cssText=`background:${done?'rgba(34,197,94,.15)':col.bg};color:${done?'var(--green)':col.fg};border:2px solid ${done?'var(--green)':col.fg};`;
+    av.textContent = done ? '✓' : name[0].toUpperCase();
+
+    const info=document.createElement('div'); info.className='m-info';
+    const nm=document.createElement('div'); nm.className='m-name'; nm.textContent=name;
+    const st=document.createElement('div'); st.className='m-status'+(done?' ok':'');
+    st.textContent = done?'Séance validée 💪':(isMe?'Pas encore fait':'En attente…');
+    const tm=document.createElement('div'); tm.className='m-time'; tm.textContent=done?fmtTime(entry.ts):'';
+    info.append(nm,st,tm);
+
+    row.append(av,info);
+    if (isMe) { const tag=document.createElement('span'); tag.className='me-tag'; tag.textContent='MOI'; row.append(tag); }
+    list.appendChild(row);
+  });
+
+  // Validate btn state
+  const vb=document.getElementById('validate-btn');
+  if (myDone && !vb.classList.contains('validated')) {
+    vb.className='validate-btn validated'; vb.textContent='✓ Séance validée !';
+  }
+
+  // Boost
+  const boost=document.getElementById('boost-banner');
+  if (boostNames.length>0 && !myDone) {
+    const n=boostNames.length===1
+      ? `${boostNames[0]} a déjà validé sa séance`
+      : `${boostNames.slice(0,-1).join(', ')} et ${boostNames[boostNames.length-1]} ont déjà validé`;
+    document.getElementById('boost-text').textContent=n;
+    boost.classList.add('show');
+  } else { boost.classList.remove('show'); }
+
+  // Streak
+  const me=room[myName]; const s=me?(me.streak||0):0;
+  document.getElementById('streak-badge').textContent=`🔥 ${s} jour${s>1?'s':''}`;
+}
+
+async function validateSession() {
+  const t=today(), room=await getRoom();
+  if (room[myName]&&room[myName].date===t) return;
+  const prev=room[myName]; let streak=1;
+  if (prev) {
+    const y=new Date(); y.setDate(y.getDate()-1);
+    if (prev.date===y.toISOString().slice(0,10)) streak=(prev.streak||1)+1;
+  }
+  room[myName]={date:t,ts:new Date().toISOString(),slot:mySlot,streak};
+  await setRoom(room);
+  // Save to local history too
+  const hist=JSON.parse(localStorage.getItem('cali-hist')||'{}');
+  hist[t]=mySlot; localStorage.setItem('cali-hist',JSON.stringify(hist));
+  showToast('✓ Séance validée !');
+  renderCrew(room);
+}
+
+function switchTab(type, save=true) {
+  mySlot=type;
+  if (save) localStorage.setItem(SLOT_KEY,type);
+  document.getElementById('panel-haut').style.display=type==='haut'?'block':'none';
+  document.getElementById('panel-bas').style.display=type==='bas'?'block':'none';
+  document.getElementById('tab-haut').className='tab'+(type==='haut'?' active-haut':'');
+  document.getElementById('tab-bas').className='tab'+(type==='bas'?' active-bas':'');
+  updateValidateBtn();
+}
+
+function toggleCard(card) { card.classList.toggle('open'); }
+function toggleExo(e,id) {
+  e.stopPropagation();
+  if (document.getElementById('validate-btn').classList.contains('validated')) return;
+  const card=document.querySelector(`[data-id="${id}"]`);
+  if (checkedExos.has(id)){checkedExos.delete(id);card.classList.remove('exo-done');card.querySelector('.chk').textContent='';}
+  else{checkedExos.add(id);card.classList.add('exo-done');card.querySelector('.chk').textContent='✓';}
+  localStorage.setItem(EXO_KEY+'_'+today(),JSON.stringify([...checkedExos]));
+  updateValidateBtn();
+}
+function renderCheckedExos() {
+  checkedExos.forEach(id=>{
+    const c=document.querySelector(`[data-id="${id}"]`);
+    if(c){c.classList.add('exo-done');c.querySelector('.chk').textContent='✓';}
+  });
+  updateValidateBtn();
+}
+function updateValidateBtn() {
+  const btn=document.getElementById('validate-btn');
+  if (btn.classList.contains('validated')) return;
+  const p=mySlot==='haut'?'h':'b';
+  const n=[...checkedExos].filter(id=>id.startsWith(p)).length;
+  btn.className='validate-btn '+(n>=TOTAL?'ready':'not-ready');
+}
+
+// ── PAGES ──
+function gotoPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-'+p).classList.add('active');
+  if (p==='cal') renderCalendar();
+}
+
+// ── CALENDAR ──
+function setCalView(v) {
+  calView=v;
+  document.getElementById('view-month').className='cal-view-btn'+(v==='month'?' active':'');
+  document.getElementById('view-year').className='cal-view-btn'+(v==='year'?' active':'');
+  document.getElementById('cal-month-view').style.display=v==='month'?'block':'none';
+  document.getElementById('cal-year-view').style.display=v==='year'?'block':'none';
+  renderCalendar();
+}
+function calMove(dir) {
+  if (calView==='month'){
+    calMonth+=dir;
+    if(calMonth<0){calMonth=11;calYear--;}
+    if(calMonth>11){calMonth=0;calYear++;}
+  } else { calYear+=dir; }
+  renderCalendar();
+}
+
+function getDoneDates() {
+  // Merge room data + local history
+  const hist=JSON.parse(localStorage.getItem('cali-hist')||'{}');
+  // also scan old EXO_KEY keys
+  for (let k in localStorage) {
+    if (k.startsWith(EXO_KEY+'_')) {
+      const date=k.replace(EXO_KEY+'_','');
+      if (!hist[date]) {
+        const exos=JSON.parse(localStorage.getItem(k)||'[]');
+        if (exos.length>0) hist[date]=exos.some(x=>x.startsWith('b'))?'bas':'haut';
+      }
+    }
+  }
+  return hist;
+}
+
+function renderCalendar() {
+  const doneDates=getDoneDates();
+  const t=today();
+  const allDates=Object.keys(doneDates).sort();
+
+  // Stats
+  let maxStr=0,cur=0,prev=null;
+  allDates.forEach(d=>{
+    if(prev){const diff=(new Date(d)-new Date(prev))/86400000;cur=diff===1?cur+1:1;}
+    else cur=1;
+    if(cur>maxStr)maxStr=cur;
+    prev=d;
+  });
+  document.getElementById('stat-total').textContent=allDates.length;
+  document.getElementById('stat-streak').textContent=maxStr;
+  const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  document.getElementById('stat-month').textContent=allDates.filter(d=>d.startsWith(mo)).length;
+
+  // Period label
+  const MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('cal-period').textContent=calView==='month'?`${MN[calMonth]} ${calYear}`:`${calYear}`;
+
+  if (calView==='month') renderMonthGrid(doneDates,t);
+  else renderYearGrid(doneDates,t);
+}
+
+function renderMonthGrid(done,t) {
+  const grid=document.getElementById('month-days');
+  grid.innerHTML='';
+  const first=new Date(calYear,calMonth,1);
+  const last=new Date(calYear,calMonth+1,0);
+  const offset=(first.getDay()+6)%7;
+  const cells=Math.ceil((offset+last.getDate())/7)*7;
+  for(let i=0;i<cells;i++){
+    const cell=document.createElement('div');
+    const dn=i-offset+1;
+    if(dn<1||dn>last.getDate()){cell.className='cal-day cal-empty';cell.textContent='';} 
+    else {
+      const dStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dn).padStart(2,'0')}`;
+      const isDone=!!done[dStr];
+      const isToday=dStr===t;
+      const isFuture=dStr>t;
+      let cls='cal-day';
+      if(isDone) cls+=` cal-done slot-${done[dStr]}`;
+      else if(isToday) cls+=' cal-today';
+      else if(isFuture) cls+=' cal-future';
+      else cls+=' cal-miss';
+      cell.className=cls;
+      cell.textContent=dn;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function renderYearGrid(done,t) {
+  const grid=document.getElementById('year-grid');
+  grid.innerHTML='';
+  const MN=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+  for(let m=0;m<12;m++){
+    const wrap=document.createElement('div'); wrap.className='mini-month';
+    const title=document.createElement('div'); title.className='mini-month-title'; title.textContent=MN[m];
+    wrap.appendChild(title);
+    const mg=document.createElement('div'); mg.className='mini-days';
+    const first=new Date(calYear,m,1), last=new Date(calYear,m+1,0);
+    const off=(first.getDay()+6)%7;
+    const tot=Math.ceil((off+last.getDate())/7)*7;
+    for(let i=0;i<tot;i++){
+      const d=document.createElement('div');
+      const dn=i-off+1;
+      if(dn<1||dn>last.getDate()){d.className='mini-day mini-empty';}
+      else {
+        const dStr=`${calYear}-${String(m+1).padStart(2,'0')}-${String(dn).padStart(2,'0')}`;
+        const isToday=dStr===t;
+        const isDone=!!done[dStr];
+        d.className='mini-day'+(isDone?' mini-done':isToday?' mini-today':'');
+        if(isDone) d.textContent='•';
+      }
+      mg.appendChild(d);
+    }
+    wrap.appendChild(mg);
+    grid.appendChild(wrap);
+  }
+}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href)
+    .then(()=>showToast('📋 Lien copié !'))
+    .catch(()=>prompt('Copie ce lien :',window.location.href));
+}
+function resetUser(){
+  if(!confirm('Changer de compte ?')) return;
+  clearInterval(pollTimer);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(SLOT_KEY);
+  location.reload();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('onboarding').style.display!=='none') saveUser();
+});
+</script>
+</body>
+</html>
