@@ -52,6 +52,12 @@
   .ms-set{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;}
   .ms-set span{color:var(--muted);font-weight:400;font-size:12px;}
   .ob-note{margin-top:20px;font-size:13px;color:var(--muted);line-height:1.6;}
+  .webview-warn{display:none;margin-top:24px;padding:16px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:12px;text-align:left;width:100%;}
+  .webview-warn.show{display:block;}
+  .ww-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#fbbf24;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .ww-text{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:12px;}
+  .ww-text b{color:var(--text);}
+  .ww-copy{width:100%;padding:12px;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.4);border-radius:9px;color:#fbbf24;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;}
 
   #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;}
   .nav-btn{flex:1;padding:14px 0 12px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
@@ -241,6 +247,11 @@
     Se connecter avec Google
   </button>
   <p class="ob-note">Connecte-toi avec Google pour retrouver tes séances sur tous tes appareils et rejoindre le Crew de tes collègues.</p>
+  <div class="webview-warn" id="webview-warn">
+    <div class="ww-title">⚠️ Ouvre dans Safari</div>
+    <div class="ww-text">La connexion Google ne marche pas dans cette fenêtre. Appuie sur <b>•••</b> en haut puis <b>« Ouvrir dans le navigateur »</b>, ou copie le lien dans Safari.</div>
+    <button class="ww-copy" onclick="copyLink()">📋 Copier le lien</button>
+  </div>
 </div>
 
 <!-- Step 2: choose pseudo (shown after first Google login) -->
@@ -766,15 +777,33 @@ window.onload = ()=>{
       // not signed in → show Google login
       document.getElementById('onboarding').style.display='flex';
       document.getElementById('pseudo-screen').style.display='none';
+      if(isInAppBrowser()){ document.getElementById('webview-warn').classList.add('show'); }
     }
   });
 };
 
+// Detect in-app browsers (Messages, Instagram, WhatsApp, Facebook, etc.) where Google blocks login
+function isInAppBrowser(){
+  const ua=(navigator.userAgent||'').toLowerCase();
+  // Common in-app webview signatures
+  if(/(fban|fbav|instagram|line|micromessenger|wv|gsa)/.test(ua)) return true;
+  // iOS: Safari UA contains "safari"; in-app webviews usually don't
+  const isIOS=/iphone|ipod|ipad/.test(ua);
+  if(isIOS && !/safari/.test(ua)) return true;
+  return false;
+}
+
 function signInGoogle(){
+  if(isInAppBrowser()){
+    document.getElementById('webview-warn').classList.add('show');
+    return;
+  }
   const provider=new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).catch(err=>{
     if(err && (err.code==='auth/popup-blocked'||err.code==='auth/cancelled-popup-request'||err.code==='auth/operation-not-supported-in-this-environment')){
       auth.signInWithRedirect(provider);
+    } else if(err && err.code==='auth/internal-error'){
+      document.getElementById('webview-warn').classList.add('show');
     } else {
       showToast('Connexion impossible');
     }
