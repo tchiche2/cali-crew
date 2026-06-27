@@ -36,6 +36,20 @@
   .member-row .m-leave{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
   .host-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#fcc63f;background:rgba(252,198,63,.12);border-radius:5px;padding:2px 7px;letter-spacing:1px;margin-left:6px;}
   .signout-link{text-align:center;padding:8px;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;opacity:.6;}
+  .m-tap-hint{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--accent);margin-top:5px;letter-spacing:.5px;text-transform:uppercase;}
+  .member-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;}
+  .member-overlay.show{display:block;}
+  .member-sheet{position:fixed;left:50%;transform:translateX(-50%) translateY(100%);bottom:0;width:100%;max-width:480px;max-height:80vh;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;border-top:1px solid var(--border);z-index:201;overflow-y:auto;transition:transform .28s ease;}
+  .member-sheet.show{transform:translateX(-50%) translateY(0);}
+  .ms-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);}
+  .ms-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:1px;}
+  .ms-meta{padding:14px 20px 4px;font-size:13px;color:var(--muted);}
+  .ms-exo{background:var(--card);border:1px solid var(--border);border-radius:12px;margin:10px 20px;padding:14px 16px;}
+  .ms-exo-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;}
+  .ms-exo-var{font-size:12px;color:var(--accent);margin-top:1px;text-transform:uppercase;letter-spacing:.5px;}
+  .ms-sets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .ms-set{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;}
+  .ms-set span{color:var(--muted);font-weight:400;font-size:12px;}
   .ob-note{margin-top:20px;font-size:13px;color:var(--muted);line-height:1.6;}
 
   #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;}
@@ -212,8 +226,8 @@
   .mini-day.mini-today{background:rgba(232,80,10,.3);}
   .mini-day.mini-empty{opacity:0;}
 
-  #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0c1a10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;padding:12px 28px;border-radius:50px;transition:transform .3s;pointer-events:none;white-space:nowrap;z-index:999;}
-  #toast.show{transform:translateX(-50%) translateY(0);}
+  #toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0c1a10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;padding:12px 28px;border-radius:50px;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;z-index:999;}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 </style>
 </head>
 <body>
@@ -334,6 +348,17 @@
 </div>
 
 <div id="toast"></div>
+
+<!-- MEMBER SESSION SHEET -->
+<div class="member-overlay" id="member-overlay" onclick="closeMemberSheet()"></div>
+<div class="member-sheet" id="member-sheet">
+  <div class="ms-header">
+    <button class="sheet-close" onclick="closeMemberSheet()">✕</button>
+    <div class="ms-title" id="ms-title">Séance</div>
+    <div class="sheet-spacer"></div>
+  </div>
+  <div id="ms-body"></div>
+</div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -995,6 +1020,7 @@ async function validateSession(){
 //  CREW — affichage temps réel + perfs publiques
 // ============================================================
 function renderCrew(room){
+  window._crewRoom = room;
   const t=today();
   const list=document.getElementById('crew-list'); list.innerHTML='';
   const others=Object.keys(room).filter(k=>k!==myName).sort();
@@ -1028,6 +1054,12 @@ function renderCrew(room){
       <div class="m-status${done?' ok':''}">${done?'Séance validée 💪':(isMe?'Pas encore fait':'En attente…')}</div>
       ${done&&entry.ts?`<div class="m-time">${fmtTime(entry.ts)}</div>`:''}
       ${perfHtml}`;
+    if(done && entry.perf && entry.perf.length){
+      info.style.cursor='pointer';
+      info.onclick=()=>openMemberSheet(name);
+      const hint=document.createElement('div'); hint.className='m-tap-hint'; hint.textContent='Voir la séance ›';
+      info.appendChild(hint);
+    }
 
     row.append(av,info);
     if(isMe){
@@ -1282,8 +1314,51 @@ function renderYearGrid(done,t){
 }
 
 // ── MISC ──
-function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
-function copyLink(){ navigator.clipboard.writeText(window.location.href).then(()=>showToast('📋 Lien copié !')).catch(()=>prompt('Copie ce lien :',window.location.href)); }
+let _toastTimer=null;
+function openMemberSheet(name){
+  const room=window._crewRoom||{}; const entry=room[name];
+  if(!entry||!entry.perf||!entry.perf.length) return;
+  document.getElementById('ms-title').textContent=name;
+  const slotLabel = entry.slot==='bas'?'🦵 Bas du corps':'💪 Haut du corps';
+  let html=`<div class="ms-meta">${slotLabel} · validée à ${fmtTime(entry.ts)}</div>`;
+  entry.perf.forEach(p=>{
+    const vTxt = p.v && p.v!=='Normal' ? p.v : '';
+    const unit = p.u==='sec'?'sec':'reps';
+    const sets = p.s.map((r,i)=>`<div class="ms-set">${r}<span> ${unit}</span></div>`).join('');
+    html+=`<div class="ms-exo">
+      <div class="ms-exo-name">${p.n}</div>
+      ${vTxt?`<div class="ms-exo-var">${vTxt}</div>`:''}
+      <div class="ms-sets">${sets}</div>
+    </div>`;
+  });
+  document.getElementById('ms-body').innerHTML=html;
+  document.getElementById('member-overlay').classList.add('show');
+  document.getElementById('member-sheet').classList.add('show');
+}
+function closeMemberSheet(){
+  document.getElementById('member-overlay').classList.remove('show');
+  document.getElementById('member-sheet').classList.remove('show');
+}
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  if(_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{ el.classList.remove('show'); _toastTimer=null; },2200);
+}
+function copyLink(){
+  const url=window.location.href;
+  const done=()=>showToast('📋 Lien copié !');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(()=>fallbackCopy(url,done));
+  } else fallbackCopy(url,done);
+}
+function fallbackCopy(text,cb){
+  try{
+    const ta=document.createElement('textarea'); ta.value=text;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb();
+  }catch(e){ prompt('Copie ce lien :',text); }
+}
 function resetUser(){
   if(!confirm('Changer de compte ?'))return;
   localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY);
