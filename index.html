@@ -1347,6 +1347,7 @@ function renderMonthGrid(done,t){
       let cls='cal-day';
       if(isDone)cls+=` cal-done slot-${done[dStr]}`; else if(isToday)cls+=' cal-today'; else if(isFuture)cls+=' cal-future'; else cls+=' cal-miss';
       cell.className=cls; cell.textContent=dn;
+      if(isDone){ cell.style.cursor='pointer'; cell.onclick=()=>openDaySheet(dStr, done[dStr]); }
     }
     grid.appendChild(cell);
   }
@@ -1396,6 +1397,43 @@ function openMemberSheet(name){
 function closeMemberSheet(){
   document.getElementById('member-overlay').classList.remove('show');
   document.getElementById('member-sheet').classList.remove('show');
+}
+// Show the full session done on a given calendar day
+function openDaySheet(dateStr, slot){
+  const hist=lsGet('anywhr-history',{});
+  // collect every exercise that has an entry on this date
+  const items=[];
+  Object.keys(hist).forEach(id=>{
+    (hist[id]||[]).forEach(s=>{ if(s.date===dateStr) items.push({id, variant:s.variant, sets:s.sets}); });
+  });
+  // order them by the app's exercise order
+  const order=[...HAUT_IDS,...BAS_IDS];
+  items.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+
+  const d=new Date(dateStr+'T00:00:00');
+  const dateLabel=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ms-title').textContent=dateLabel.charAt(0).toUpperCase()+dateLabel.slice(1);
+
+  const slotLabel = slot==='bas'?'🦵 Bas du corps':'💪 Haut du corps';
+  if(!items.length){
+    document.getElementById('ms-body').innerHTML=`<div class="ms-meta">${slotLabel}</div><div style="padding:40px 20px;text-align:center;color:var(--muted)">Pas de détail enregistré pour cette séance.</div>`;
+  } else {
+    let html=`<div class="ms-meta">${slotLabel} · ${items.length} exercice${items.length>1?'s':''}</div>`;
+    items.forEach(p=>{
+      const e=EXOS[p.id];
+      const vTxt = p.variant && p.variant!=='Normal' ? p.variant : '';
+      const unit = e.unit==='sec'?'sec':'reps';
+      const sets = p.sets.map(r=>`<div class="ms-set">${r}<span> ${unit}</span></div>`).join('');
+      html+=`<div class="ms-exo">
+        <div class="ms-exo-name">${e.name}</div>
+        ${vTxt?`<div class="ms-exo-var">${vTxt}</div>`:''}
+        <div class="ms-sets">${sets}</div>
+      </div>`;
+    });
+    document.getElementById('ms-body').innerHTML=html;
+  }
+  document.getElementById('member-overlay').classList.add('show');
+  document.getElementById('member-sheet').classList.add('show');
 }
 function showToast(msg){
   const el=document.getElementById('toast');
