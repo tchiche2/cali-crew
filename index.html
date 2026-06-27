@@ -25,6 +25,17 @@
   .ob-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:28px;}
   .ob-input:focus{border-color:var(--accent);}
   .ob-btn{width:100%;padding:18px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;}
+  .google-btn{width:100%;padding:15px;background:#fff;border:none;border-radius:12px;color:#1f2430;font-family:'Barlow',sans-serif;font-weight:600;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:18px;}
+  .ob-or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;width:100%;}
+  .ob-or::before,.ob-or::after{content:'';flex:1;height:1px;background:var(--border);}
+  .set-row-wrap{position:relative;overflow:hidden;}
+  .set-row-del{position:absolute;inset:0;background:#c0392b;display:flex;align-items:center;justify-content:flex-end;padding-right:20px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:1px;}
+  .set-row-del span{display:flex;align-items:center;gap:6px;}
+  .set-row{position:relative;background:var(--card);transition:transform .15s ease;touch-action:pan-y;}
+  .member-row .m-del{margin-left:auto;width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:15px;cursor:pointer;flex-shrink:0;}
+  .member-row .m-leave{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+  .host-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#fcc63f;background:rgba(252,198,63,.12);border-radius:5px;padding:2px 7px;letter-spacing:1px;margin-left:6px;}
+  .signout-link{text-align:center;padding:8px;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;opacity:.6;}
   .ob-note{margin-top:20px;font-size:13px;color:var(--muted);line-height:1.6;}
 
   #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;}
@@ -210,10 +221,15 @@
 <div id="onboarding" style="display:none">
   <div class="ob-logo">Any<span>whr</span></div>
   <div class="ob-sub">Sol uniquement · Poids de corps · Entre routiers</div>
-  <div class="ob-label">Ton prénom</div>
+  <button class="google-btn" onclick="signInGoogle()">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.5-2.1 14.3-5.6l-6.6-5.6C29.7 34.6 27 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6.6 5.6C41.4 36.9 44 31 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+    Se connecter avec Google
+  </button>
+  <div class="ob-or">ou</div>
+  <div class="ob-label">Continuer avec un prénom</div>
   <input class="ob-input" id="ob-name" type="text" placeholder="Ex : Tony" maxlength="16" autocomplete="off">
   <button class="ob-btn" onclick="saveUser()">Commencer</button>
-  <p class="ob-note">Partage le lien à tes collègues — ils entrent leur prénom et rejoignent le groupe.</p>
+  <p class="ob-note">Connecte-toi avec Google pour retrouver tes données sur tous tes appareils. Partage le lien à tes collègues pour qu'ils rejoignent le groupe.</p>
 </div>
 
 <div id="app" style="display:none">
@@ -322,6 +338,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 // ============================================================
 //  ANYWHR — Base de données des exercices
@@ -572,6 +589,7 @@ const COLORS = [
   {bg:'rgba(99,102,241,.15)',fg:'#6366f1'},{bg:'rgba(251,146,60,.15)',fg:'#fb923c'},
 ];
 let myName='', mySlot='haut';
+let myUid=null, isGoogle=false, hostName=null;
 let calView='month', calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let currentSheetExo=null;
 // workout state for today: { exoId: { variant, sets:[{reps,done}] } }
@@ -594,64 +612,93 @@ function muscleColor(level){
   return 'var(--skin)';
 }
 function bodySVG(hl, side){
-  const c = (m)=> muscleColor(hl[m]);
-  const sl = 'var(--skin-line)', sk='var(--skin)';
+  const c = (m)=> muscleColor(hl[m]);   // muscle color if highlighted, else skin
+  const sl = 'var(--skin-line)';
   if(side==='front'){
-    return `<svg width="130" height="300" viewBox="0 0 130 300">
+    return `<svg width="116" height="158" viewBox="0 0 150 205">
       <defs>
-        <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff5a30"/><stop offset="100%" stop-color="#cc2a06"/></linearGradient>
-        <linearGradient id="og" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fbb43e"/><stop offset="100%" stop-color="#d6810d"/></linearGradient>
+        <radialGradient id="pg" cx="50%" cy="36%" r="65%"><stop offset="0%" stop-color="#ff6a40"/><stop offset="100%" stop-color="#bd2705"/></radialGradient>
       </defs>
-      <ellipse cx="65" cy="20" rx="13" ry="16" fill="${sk}" stroke="${sl}"/>
-      <rect x="58" y="34" width="14" height="9" rx="3" fill="${sk}" stroke="${sl}"/>
-      <path d="M48 44 Q65 38 82 44 Q74 50 70 56 Q65 50 60 56 Q56 50 48 44Z" fill="${c('traps')}" stroke="${sl}" stroke-width="0.6"/>
-      <path d="M46 48 Q32 50 28 70 Q26 84 34 90 Q46 80 52 62 Q52 52 46 48Z" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M84 48 Q98 50 102 70 Q104 84 96 90 Q84 80 78 62 Q78 52 84 48Z" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M50 52 Q65 46 65 46 L65 80 Q54 86 46 80 Q40 66 46 56Z" fill="${c('pec')}" stroke="#8a1d04" stroke-width="0.8"/>
-      <path d="M80 52 Q65 46 65 46 L65 80 Q76 86 84 80 Q90 66 84 56Z" fill="${c('pec')}" stroke="#8a1d04" stroke-width="0.8"/>
-      <path d="M65 48 L65 80" stroke="#0c0e14" stroke-width="1" opacity="0.4"/>
-      <path d="M30 90 Q26 116 31 142 L43 139 Q38 114 40 88Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M100 90 Q104 116 99 142 L87 139 Q92 114 90 88Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M30 92 Q27 116 32 140 L38 139 Q34 114 36 90Z" fill="${c('triceps')}" opacity="0.85"/>
-      <path d="M100 92 Q103 116 98 140 L92 139 Q96 114 94 90Z" fill="${c('triceps')}" opacity="0.85"/>
-      <path d="M31 144 Q27 172 33 196 L44 193 Q38 168 40 142Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M99 144 Q103 172 97 196 L86 193 Q92 168 90 142Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <ellipse cx="38" cy="204" rx="7" ry="10" fill="${sk}" stroke="${sl}"/>
-      <ellipse cx="92" cy="204" rx="7" ry="10" fill="${sk}" stroke="${sl}"/>
-      <path d="M54 82 L76 82 L72 138 Q65 144 58 138Z" fill="${c('abs')}" stroke="#c2890f" stroke-width="0.7"/>
-      <line x1="65" y1="84" x2="65" y2="138" stroke="#0c0e14" stroke-width="1" opacity="0.45"/>
-      <line x1="56" y1="98" x2="74" y2="98" stroke="#0c0e14" stroke-width="0.7" opacity="0.45"/>
-      <line x1="55" y1="113" x2="75" y2="113" stroke="#0c0e14" stroke-width="0.7" opacity="0.45"/>
-      <line x1="56" y1="127" x2="74" y2="127" stroke="#0c0e14" stroke-width="0.7" opacity="0.45"/>
-      <path d="M56 140 L74 140 Q80 156 76 172 L54 172 Q50 156 56 140Z" fill="${c('adductors')||sk}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M55 174 Q47 220 54 268 L66 265 Q67 220 64 174Z" fill="${c('quads')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M75 174 Q83 220 76 268 L64 265 Q63 220 66 174Z" fill="${c('quads')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M60 184 Q57 226 62 262 M70 184 Q73 226 68 262" stroke="${sl}" stroke-width="0.5" fill="none" opacity="0.4"/>
-      <path d="M56 270 Q50 286 57 298 L65 296 L65 270Z" fill="${sk}" stroke="${sl}"/>
-      <path d="M74 270 Q80 286 73 298 L65 296 L65 270Z" fill="${sk}" stroke="${sl}"/>
+      <ellipse cx="75" cy="14" rx="11" ry="13" fill="var(--skin)" stroke="${sl}" stroke-width="0.8"/>
+      <path d="M67 24 Q75 29 83 24 L82 33 L68 33Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.8"/>
+      <!-- lats behind everything -->
+      <path d="M54 57 L62 58 L72 100 L60 90 Q55 74 54 57Z" fill="${c('lats')}" stroke="${sl}" stroke-width="0.4"/>
+      <path d="M96 57 L88 58 L78 100 L90 90 Q95 74 96 57Z" fill="${c('lats')}" stroke="${sl}" stroke-width="0.4"/>
+      <!-- traps -->
+      <path d="M58 34 Q75 28 92 34 Q86 41 81 47 Q75 41 69 47 Q64 41 58 34Z" fill="${c('traps')}" stroke="${sl}" stroke-width="0.5"/>
+      <!-- deltoids -->
+      <ellipse cx="51" cy="50" rx="11" ry="11" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="99" cy="50" rx="11" ry="11" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.7"/>
+      <!-- pecs -->
+      <path d="M57 44 Q75 40 75 40 L75 68 Q62 73 56 66 Q51 56 54 48Z" fill="${c('pec')}" stroke="#8a1d04" stroke-width="0.9"/>
+      <path d="M93 44 Q75 40 75 40 L75 68 Q88 73 94 66 Q99 56 96 48Z" fill="${c('pec')}" stroke="#8a1d04" stroke-width="0.9"/>
+      <path d="M75 42 L75 68" stroke="#0c0e14" stroke-width="1.2" opacity="0.4"/>
+      <!-- upper arms -->
+      <path d="M38 60 Q33 78 38 96 L49 94 Q45 78 47 58Z" fill="${c('triceps')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M112 60 Q117 78 112 96 L101 94 Q105 78 103 58Z" fill="${c('triceps')}" stroke="${sl}" stroke-width="0.7"/>
+      <!-- forearms + hands -->
+      <path d="M38 98 Q34 112 39 128 L49 126 Q44 110 47 96Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M112 98 Q116 112 111 128 L101 126 Q106 110 103 96Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="44" cy="133" rx="6" ry="7" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="106" cy="133" rx="6" ry="7" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <!-- abs -->
+      <path d="M58 71 L92 71 L88 108 Q75 114 62 108Z" fill="${c('abs')}" stroke="#c2890f" stroke-width="0.8"/>
+      <line x1="75" y1="73" x2="75" y2="108" stroke="#0c0e14" stroke-width="1" opacity="0.45"/>
+      <line x1="60" y1="82" x2="90" y2="82" stroke="#0c0e14" stroke-width="0.8" opacity="0.45"/>
+      <line x1="59" y1="92" x2="91" y2="92" stroke="#0c0e14" stroke-width="0.8" opacity="0.45"/>
+      <line x1="60" y1="101" x2="90" y2="101" stroke="#0c0e14" stroke-width="0.8" opacity="0.45"/>
+      <!-- hips -->
+      <path d="M60 110 L90 110 Q95 122 91 134 L59 134 Q55 122 60 110Z" fill="${c('adductors')}" stroke="${sl}" stroke-width="0.7"/>
+      <!-- thighs (quads) -->
+      <path d="M58 136 Q50 160 56 186 L70 184 Q71 160 68 136Z" fill="${c('quads')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M92 136 Q100 160 94 186 L80 184 Q79 160 82 136Z" fill="${c('quads')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M62 144 Q59 164 64 182 M66 144 Q67 164 65 182" stroke="${sl}" stroke-width="0.4" fill="none" opacity="0.4"/>
+      <path d="M88 144 Q91 164 86 182 M84 144 Q83 164 85 182" stroke="${sl}" stroke-width="0.4" fill="none" opacity="0.4"/>
+      <!-- shins + feet -->
+      <path d="M57 186 Q54 196 57 202 L67 202 Q68 196 67 186Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M93 186 Q96 196 93 202 L83 202 Q82 196 83 186Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M57 202 L67 202 Q68 205 64 205 L54 205 Q53 202 57 202Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M93 202 L83 202 Q82 205 86 205 L96 205 Q97 202 93 202Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
     </svg>`;
   } else {
-    return `<svg width="130" height="300" viewBox="0 0 130 300">
-      <ellipse cx="65" cy="20" rx="13" ry="16" fill="${sk}" stroke="${sl}"/>
-      <rect x="58" y="34" width="14" height="9" rx="3" fill="${sk}" stroke="${sl}"/>
-      <path d="M48 42 Q65 36 82 42 Q76 70 70 86 Q65 80 60 86 Q54 70 48 42Z" fill="${c('traps')}" stroke="${sl}" stroke-width="0.6"/>
-      <line x1="65" y1="40" x2="65" y2="84" stroke="#0c0e14" stroke-width="0.7" opacity="0.3"/>
-      <path d="M46 48 Q32 50 28 70 Q26 84 34 90 Q46 80 52 62 Q52 52 46 48Z" fill="${c('deltoid')}" opacity="0.9" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M84 48 Q98 50 102 70 Q104 84 96 90 Q84 80 78 62 Q78 52 84 48Z" fill="${c('deltoid')}" opacity="0.9" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M52 86 Q65 80 78 86 Q74 116 65 128 Q56 116 52 86Z" fill="${c('lats')||c('traps')}" opacity="0.6" stroke="${sl}" stroke-width="0.6"/>
-      <path d="M30 90 Q26 116 32 142 L43 139 Q38 114 40 88Z" fill="${c('triceps')}" opacity="0.9" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M100 90 Q104 116 98 142 L87 139 Q92 114 90 88Z" fill="${c('triceps')}" opacity="0.9" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M31 144 Q27 172 33 196 L44 193 Q38 168 40 142Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M99 144 Q103 172 97 196 L86 193 Q92 168 90 142Z" fill="${sk}" stroke="${sl}" stroke-width="0.8"/>
-      <ellipse cx="38" cy="204" rx="7" ry="10" fill="${sk}" stroke="${sl}"/>
-      <ellipse cx="92" cy="204" rx="7" ry="10" fill="${sk}" stroke="${sl}"/>
-      <path d="M56 128 L74 128 Q78 146 74 162 L56 162 Q52 146 56 128Z" fill="${c('lowerback')}" opacity="0.85" stroke="${sl}" stroke-width="0.6"/>
-      <path d="M54 164 Q65 158 76 164 Q80 182 72 192 Q65 196 58 192 Q50 182 54 164Z" fill="${c('glutes')}" stroke="${sl}" stroke-width="0.8"/>
-      <line x1="65" y1="164" x2="65" y2="194" stroke="${sl}" stroke-width="0.6" opacity="0.5"/>
-      <path d="M55 194 Q47 232 54 270 L66 267 Q67 232 64 194Z" fill="${c('hamstrings')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M75 194 Q83 232 76 270 L64 267 Q63 232 66 194Z" fill="${c('hamstrings')}" stroke="${sl}" stroke-width="0.8"/>
-      <path d="M56 272 Q50 288 57 300 L65 298 L65 272Z" fill="${sk}" stroke="${sl}"/>
-      <path d="M74 272 Q80 288 73 300 L65 298 L65 272Z" fill="${sk}" stroke="${sl}"/>
+    return `<svg width="116" height="158" viewBox="0 0 150 205">
+      <ellipse cx="75" cy="14" rx="11" ry="13" fill="var(--skin)" stroke="${sl}" stroke-width="0.8"/>
+      <path d="M67 24 Q75 29 83 24 L82 33 L68 33Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.8"/>
+      <!-- traps -->
+      <path d="M58 33 Q75 27 92 33 Q88 48 82 60 Q75 55 68 60 Q62 48 58 33Z" fill="${c('traps')}" stroke="${sl}" stroke-width="0.5"/>
+      <line x1="75" y1="30" x2="75" y2="58" stroke="#0c0e14" stroke-width="0.8" opacity="0.3"/>
+      <!-- rear delts -->
+      <ellipse cx="51" cy="50" rx="11" ry="11" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="99" cy="50" rx="11" ry="11" fill="${c('deltoid')}" stroke="${sl}" stroke-width="0.7"/>
+      <!-- triceps -->
+      <path d="M38 60 Q33 78 38 96 L49 94 Q45 78 47 58Z" fill="${c('triceps')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M112 60 Q117 78 112 96 L101 94 Q105 78 103 58Z" fill="${c('triceps')}" stroke="${sl}" stroke-width="0.7"/>
+      <!-- forearms + hands -->
+      <path d="M38 98 Q34 112 39 128 L49 126 Q44 110 47 96Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M112 98 Q116 112 111 128 L101 126 Q106 110 103 96Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="44" cy="133" rx="6" ry="7" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <ellipse cx="106" cy="133" rx="6" ry="7" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <!-- grand dorsal (lats) solid, main back muscle -->
+      <path d="M52 50 L73 56 L75 104 L60 88 Q51 70 52 50Z" fill="${c('lats')}" stroke="${sl}" stroke-width="0.5"/>
+      <path d="M98 50 L77 56 L75 104 L90 88 Q99 70 98 50Z" fill="${c('lats')}" stroke="${sl}" stroke-width="0.5"/>
+      <line x1="75" y1="56" x2="75" y2="104" stroke="#0c0e14" stroke-width="1" opacity="0.35"/>
+      <!-- lower back -->
+      <path d="M58 100 L92 100 Q90 108 86 116 Q75 121 64 116 Q60 108 58 100Z" fill="${c('lowerback')}" stroke="${sl}" stroke-width="0.4"/>
+      <!-- hips -->
+      <path d="M60 110 L90 110 Q95 122 91 134 L59 134 Q55 122 60 110Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <!-- glutes -->
+      <path d="M60 113 Q75 108 90 113 Q93 124 86 131 Q75 135 64 131 Q57 124 60 113Z" fill="${c('glutes')}" stroke="${sl}" stroke-width="0.6"/>
+      <line x1="75" y1="113" x2="75" y2="133" stroke="${sl}" stroke-width="0.6" opacity="0.5"/>
+      <!-- hamstrings -->
+      <path d="M58 136 Q50 160 56 186 L70 184 Q71 160 68 136Z" fill="${c('hamstrings')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M92 136 Q100 160 94 186 L80 184 Q79 160 82 136Z" fill="${c('hamstrings')}" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M63 144 L65 182 M67 144 L66 182" stroke="${sl}" stroke-width="0.4" opacity="0.4"/>
+      <path d="M87 144 L85 182 M83 144 L84 182" stroke="${sl}" stroke-width="0.4" opacity="0.4"/>
+      <!-- calves + feet -->
+      <path d="M57 186 Q54 196 57 202 L67 202 Q68 196 67 186Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M93 186 Q96 196 93 202 L83 202 Q82 196 83 186Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M57 202 L67 202 Q68 205 64 205 L54 205 Q53 202 57 202Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
+      <path d="M93 202 L83 202 Q82 205 86 205 L96 205 Q97 202 93 202Z" fill="var(--skin)" stroke="${sl}" stroke-width="0.7"/>
     </svg>`;
   }
 }
@@ -659,16 +706,54 @@ function bodySVG(hl, side){
 // ============================================================
 //  ONBOARDING
 // ============================================================
+// ============================================================
+const auth = firebase.auth();
+
 window.onload = ()=>{
-  myName = localStorage.getItem(USER_KEY)||'';
-  if(!myName){ document.getElementById('onboarding').style.display='flex'; }
-  else startApp();
+  // If returning from a Google redirect, or already signed in, auth state handles it.
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      isGoogle=true; myUid=user.uid;
+      myName = (user.displayName||'').split(' ')[0] || localStorage.getItem(USER_KEY) || 'Moi';
+      localStorage.setItem(USER_KEY,myName);
+      ensureMember(myName);
+      document.getElementById('onboarding').style.display='none';
+      startApp();
+    } else {
+      // no Google session — fall back to local name
+      myName = localStorage.getItem(USER_KEY)||'';
+      if(!myName){ document.getElementById('onboarding').style.display='flex'; }
+      else { isGoogle=false; startApp(); }
+    }
+  });
 };
+
+function signInGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>{
+    // popup blocked (common on mobile) → use redirect
+    if(err && (err.code==='auth/popup-blocked'||err.code==='auth/cancelled-popup-request'||err.code==='auth/operation-not-supported-in-this-environment')){
+      auth.signInWithRedirect(provider);
+    } else {
+      showToast('Connexion impossible');
+    }
+  });
+}
+
+function ensureMember(n){
+  db.ref('crew/'+n).once('value').then(s=>{
+    if(!s.val()) setMember(n,{date:'',ts:'',slot:'',streak:0,perf:null,uid:myUid||null});
+    else if(myUid && !s.val().uid) db.ref('crew/'+n+'/uid').set(myUid);
+  });
+  // claim host if the crew has no host yet
+  db.ref('crewHost').once('value').then(s=>{ if(!s.val()) db.ref('crewHost').set(n); });
+}
+
 function saveUser(){
   const n=document.getElementById('ob-name').value.trim();
   if(!n) return;
-  localStorage.setItem(USER_KEY,n); myName=n;
-  db.ref('crew/'+n).once('value').then(s=>{ if(!s.val()) setMember(n,{date:'',ts:'',slot:'',streak:0,perf:null}); });
+  localStorage.setItem(USER_KEY,n); myName=n; isGoogle=false;
+  ensureMember(n);
   document.getElementById('onboarding').style.display='none';
   startApp();
 }
@@ -676,11 +761,36 @@ function startApp(){
   document.getElementById('app').style.display='block';
   document.getElementById('header-name').textContent=myName;
   mySlot=localStorage.getItem(SLOT_KEY)||'haut';
-  loadWorkout();
-  buildExerciseList('haut'); buildExerciseList('bas');
-  switchTab(mySlot,false);
+  loadHistoryFromCloud().then(()=>{
+    loadWorkout();
+    buildExerciseList('haut'); buildExerciseList('bas');
+    switchTab(mySlot,false);
+  });
   setDateBar();
+  db.ref('crewHost').on('value',s=>{ hostName=s.val()||null; });
   db.ref('crew').on('value',s=>renderCrew(s.val()||{}));
+}
+// Pull this user's saved history from Firebase (so data follows the account)
+async function loadHistoryFromCloud(){
+  if(!myName) return;
+  try{
+    const snap=await db.ref('userdata/'+sanitize(myName)).once('value');
+    const d=snap.val();
+    if(d){
+      if(d.history) lsSet('anywhr-history',d.history);
+      if(d.sessions) lsSet('anywhr-sessions',d.sessions);
+    }
+  }catch(e){}
+}
+function sanitize(n){ return n.replace(/[.#$/\[\]]/g,'_'); }
+async function saveHistoryToCloud(){
+  if(!myName) return;
+  try{
+    await db.ref('userdata/'+sanitize(myName)).set({
+      history: lsGet('anywhr-history',{}),
+      sessions: lsGet('anywhr-sessions',{})
+    });
+  }catch(e){}
 }
 function setDateBar(){
   const d=new Date();
@@ -766,6 +876,13 @@ function buildExoBlock(id){
 
 function buildSetRow(id,i,prev){
   const e=EXOS[id], s=workout[id].sets[i];
+  const wrap=document.createElement('div');
+  wrap.className='set-row-wrap';
+  const del=document.createElement('div');
+  del.className='set-row-del';
+  del.innerHTML='<span>🗑️ Supprimer</span>';
+  wrap.appendChild(del);
+
   const row=document.createElement('div');
   row.className='set-row'+(s.done?' done':'');
   const prevTxt = prev&&prev.sets[i]!=null ? `${prev.sets[i]} ${e.unit==='sec'?'sec':'reps'}` : '—';
@@ -780,7 +897,35 @@ function buildSetRow(id,i,prev){
     if(s.done && !s.reps){ s.reps=String(e.defaultReps); input.value=s.reps; }
     saveWorkout(); refreshBlock(id);
   };
-  return row;
+
+  // ── swipe to delete ──
+  let startX=0, curX=0, dragging=false;
+  const THRESH=70;
+  row.addEventListener('touchstart',ev=>{
+    if(ev.target.classList.contains('rep-input')) return; // let typing work
+    startX=ev.touches[0].clientX; dragging=true; row.style.transition='none';
+  },{passive:true});
+  row.addEventListener('touchmove',ev=>{
+    if(!dragging) return;
+    curX=ev.touches[0].clientX-startX;
+    if(curX<0) row.style.transform=`translateX(${Math.max(curX,-110)}px)`;
+  },{passive:true});
+  row.addEventListener('touchend',()=>{
+    if(!dragging) return; dragging=false;
+    row.style.transition='transform .15s ease';
+    if(curX<-THRESH){
+      row.style.transform='translateX(-110%)';
+      setTimeout(()=>deleteSet(id,i),150);
+    } else { row.style.transform='translateX(0)'; }
+    curX=0;
+  });
+  wrap.appendChild(row);
+  return wrap;
+}
+function deleteSet(id,i){
+  if(workout[id].sets.length<=1){ refreshBlock(id); showToast('Au moins une série requise'); return; }
+  workout[id].sets.splice(i,1);
+  saveWorkout(); refreshBlock(id);
 }
 
 function refreshBlock(id){
@@ -840,7 +985,8 @@ async function validateSession(){
   if(prev&&prev.date){ const y=new Date();y.setDate(y.getDate()-1);
     if(prev.date===y.toISOString().slice(0,10)) streak=(prev.streak||1)+1; }
 
-  await setMember(myName,{date:t,ts:new Date().toISOString(),slot:mySlot,streak,perf:publicPerf});
+  await setMember(myName,{date:t,ts:new Date().toISOString(),slot:mySlot,streak,perf:publicPerf,uid:myUid||(prev&&prev.uid)||null});
+  saveHistoryToCloud();
   btn.className='validate-btn validated'; btn.textContent='✓ Séance validée !';
   showToast('✓ Séance validée !');
 }
@@ -878,13 +1024,22 @@ function renderCrew(room){
       let more = entry.perf.length>3 ? ` +${entry.perf.length-3} autres` : '';
       perfHtml=`<div class="m-perf">${lines.join('<br>')}${more}</div>`;
     }
-    info.innerHTML=`<div class="m-name">${name}</div>
+    info.innerHTML=`<div class="m-name">${name}${name===hostName?'<span class="host-tag">HÔTE</span>':''}</div>
       <div class="m-status${done?' ok':''}">${done?'Séance validée 💪':(isMe?'Pas encore fait':'En attente…')}</div>
       ${done&&entry.ts?`<div class="m-time">${fmtTime(entry.ts)}</div>`:''}
       ${perfHtml}`;
 
     row.append(av,info);
-    if(isMe){ const tag=document.createElement('span'); tag.className='me-tag'; tag.textContent='MOI'; row.append(tag); }
+    if(isMe){
+      const tag=document.createElement('span'); tag.className='me-tag'; tag.textContent='MOI'; row.append(tag);
+      // anyone can remove themselves (except keep it simple: host leaving passes host on)
+      const leave=document.createElement('button'); leave.className='m-leave'; leave.textContent='Quitter';
+      leave.onclick=()=>leaveCrew(name); row.append(leave);
+    } else if(myName===hostName){
+      // host can remove any other member
+      const delb=document.createElement('button'); delb.className='m-del'; delb.textContent='✕';
+      delb.title='Supprimer ce membre'; delb.onclick=()=>hostRemove(name); row.append(delb);
+    }
     list.appendChild(row);
   });
 
@@ -1129,7 +1284,36 @@ function renderYearGrid(done,t){
 // ── MISC ──
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2800); }
 function copyLink(){ navigator.clipboard.writeText(window.location.href).then(()=>showToast('📋 Lien copié !')).catch(()=>prompt('Copie ce lien :',window.location.href)); }
-function resetUser(){ if(!confirm('Changer de compte ?'))return; localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY); location.reload(); }
+function resetUser(){
+  if(!confirm('Changer de compte ?'))return;
+  localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY);
+  if(isGoogle){ auth.signOut().then(()=>location.reload()); } else location.reload();
+}
+// Host removes another member from the crew
+function hostRemove(name){
+  if(myName!==hostName){ showToast("Seul l'hôte peut supprimer"); return; }
+  if(name===hostName){ showToast("L'hôte ne peut pas se supprimer"); return; }
+  if(!confirm(`Retirer ${name} du Crew ?`))return;
+  db.ref('crew/'+name).remove();
+  showToast(`${name} retiré du Crew`);
+}
+// A member removes themselves
+function leaveCrew(name){
+  const msg = (name===hostName)
+    ? "Tu es l'hôte. Si tu quittes, le rôle passera à un autre membre. Continuer ?"
+    : "Te retirer du Crew ? Tes séances locales restent sur ton téléphone.";
+  if(!confirm(msg))return;
+  db.ref('crew/'+name).remove().then(async ()=>{
+    if(name===hostName){
+      // pass host to next member alphabetically, or clear
+      const snap=await db.ref('crew').once('value'); const room=snap.val()||{};
+      const next=Object.keys(room).sort()[0]||null;
+      await db.ref('crewHost').set(next);
+    }
+    localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY);
+    if(isGoogle){ auth.signOut().then(()=>location.reload()); } else location.reload();
+  });
+}
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('onboarding').style.display!=='none') saveUser(); });
 
 </script>
