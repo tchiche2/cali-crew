@@ -249,7 +249,7 @@
   <p class="ob-note">Connecte-toi avec Google pour retrouver tes séances sur tous tes appareils et rejoindre le Crew de tes collègues.</p>
   <div class="webview-warn" id="webview-warn">
     <div class="ww-title">⚠️ Ouvre dans Safari</div>
-    <div class="ww-text">La connexion Google ne marche pas dans cette fenêtre. Appuie sur <b>•••</b> en haut puis <b>« Ouvrir dans le navigateur »</b>, ou copie le lien dans Safari.</div>
+    <div class="ww-text">La connexion Google est bloquée dans les navigateurs intégrés (Snapchat, Insta, etc.). Appuie sur <b>•••</b> ou <b>⤴︎</b> en haut de l'écran, puis choisis <b>« Ouvrir dans le navigateur »</b> ou <b>« Ouvrir dans Safari »</b>. Sinon, copie le lien ci-dessous et colle-le dans Safari.</div>
     <button class="ww-copy" onclick="copyLink()">📋 Copier le lien</button>
   </div>
 </div>
@@ -784,12 +784,18 @@ window.onload = ()=>{
 
 // Detect in-app browsers (Messages, Instagram, WhatsApp, Facebook, etc.) where Google blocks login
 function isInAppBrowser(){
-  const ua=(navigator.userAgent||'').toLowerCase();
-  // Common in-app webview signatures
-  if(/(fban|fbav|instagram|line|micromessenger|wv|gsa)/.test(ua)) return true;
-  // iOS: Safari UA contains "safari"; in-app webviews usually don't
+  const ua=(navigator.userAgent||navigator.vendor||'').toLowerCase();
+  // Known in-app webview signatures (Snapchat, Insta, FB, WhatsApp, TikTok, etc.)
+  const inApp=/(snapchat|fban|fbav|fb_iab|instagram|line|micromessenger|wechat|whatsapp|tiktok|musical_ly|bytedance|twitter|pinterest|linkedinapp|gsa|webview|; wv)/;
+  if(inApp.test(ua)) return true;
+  // iOS heuristic: a real Safari UA has "version/" before "safari". In-app webviews omit "version/".
   const isIOS=/iphone|ipod|ipad/.test(ua);
-  if(isIOS && !/safari/.test(ua)) return true;
+  if(isIOS){
+    const isRealSafari = /safari/.test(ua) && /version\//.test(ua);
+    if(!isRealSafari) return true;
+  }
+  // Android webview heuristic
+  if(/android/.test(ua) && /; wv\)/.test(ua)) return true;
   return false;
 }
 
