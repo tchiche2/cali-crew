@@ -156,6 +156,11 @@
   .sheet-panel{display:none;}
   .sheet-panel.active{display:block;}
 
+  .fdb-wrap{padding:14px 14px 4px;}
+  .fdb-imgs{display:flex;gap:10px;}
+  .fdb-step{flex:1;background:#fff;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--border);}
+  .fdb-step img{width:100%;height:auto;display:block;aspect-ratio:1/1;object-fit:contain;background:#fff;}
+  .fdb-lbl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:center;padding:10px 0 5px;}
   .anatomy-wrap{display:flex;justify-content:center;gap:6px;padding:20px 16px 10px;background:radial-gradient(ellipse at center,#161a26 0%,#0c0e14 80%);}
   .body-view{display:flex;flex-direction:column;align-items:center;gap:6px;}
   .body-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
@@ -1179,12 +1184,63 @@ function showSheetTab(id,btn){
   document.getElementById('sheet').scrollTop=0;
 }
 
+// Mapping vers les images free-exercise-db (domaine public).
+// Chaque exo -> nom du dossier sur le dépôt. 2 images : 0.jpg (départ) et 1.jpg (fin).
+const FDB_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const FDB_MAP={
+  h1:'Pushups',
+  h2:'Close-Grip_Push-Up_off_of_a_Dumbbell',
+  h3:'Push-Up_Wide',
+  h4:'Pike_Push-Up',
+  h5:'Superman',
+  h6:'Plank',
+  h7:'Side_Bridge',
+  b1:'Bodyweight_Squat',
+  b2:'Bodyweight_Walking_Lunge',
+  b3:'Plie_Dumbbell_Squat',
+  b4:'Butt_Lift_(Bridge)',
+  b5:'Flat_Bench_Lying_Leg_Raise',
+  b6:'One-Arm_Kettlebell_Swings',
+  b7:'Wall_Sit'
+};
+// Construit le bloc d'images (2 photos départ/fin). Si une image manque, elle se cache,
+// et si les 2 manquent, tout le bloc disparaît proprement.
+function fdbImagesBlock(id){
+  const folder=FDB_MAP[id];
+  if(!folder) return '';
+  const u0=FDB_BASE+folder+'/0.jpg';
+  const u1=FDB_BASE+folder+'/1.jpg';
+  const wrapId='fdb-'+id;
+  return `<div class="fdb-wrap" id="${wrapId}">
+      <div class="fdb-imgs">
+        <div class="fdb-step">
+          <img src="${u0}" alt="Position de départ" loading="lazy"
+               onerror="this.parentElement.style.display='none';fdbCheck('${wrapId}')">
+          <div class="fdb-lbl">Départ</div>
+        </div>
+        <div class="fdb-step">
+          <img src="${u1}" alt="Position finale" loading="lazy"
+               onerror="this.parentElement.style.display='none';fdbCheck('${wrapId}')">
+          <div class="fdb-lbl">Fin</div>
+        </div>
+      </div>
+    </div>`;
+}
+// Si les deux images d'un exo ont échoué, on masque tout le bloc.
+function fdbCheck(wrapId){
+  const w=document.getElementById(wrapId);
+  if(!w) return;
+  const visibles=[...w.querySelectorAll('.fdb-step')].filter(s=>s.style.display!=='none');
+  if(visibles.length===0) w.style.display='none';
+}
+
 function renderApropos(id){
   const e=EXOS[id], hl=e.highlight;
   const primTags=e.muscles.primary.map(m=>`<span class="ml-tag primary">${m}</span>`).join('');
   const secTags=(e.muscles.secondary||[]).map(m=>`<span class="ml-tag secondary">${m}</span>`).join('');
   const steps=e.instructions.map((s,i)=>`<div class="instr-step"><div class="instr-num">${i+1}</div><div class="instr-text">${s}</div></div>`).join('');
   document.getElementById('sheet-apropos').innerHTML=`
+    ${fdbImagesBlock(id)}
     <div class="anatomy-wrap">
       <div class="body-view">${bodySVG(hl,'front')}<div class="body-label">Face avant</div></div>
       <div class="body-view">${bodySVG(hl,'back')}<div class="body-label">Face arrière</div></div>
