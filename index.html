@@ -126,6 +126,18 @@
   .set-row.done .set-check{background:var(--green);border-color:var(--green);color:#0c1a10;}
   .add-set{width:calc(100% - 32px);margin:8px 16px 14px;padding:11px;background:none;border:1.5px dashed var(--border);border-radius:10px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;}
 
+  /* Barre de chrono de séance (fixée en haut) */
+  .timer-bar{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-100%);width:100%;max-width:480px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;z-index:150;transition:transform .3s ease;box-shadow:0 2px 12px rgba(0,0,0,.4);}
+  .timer-bar.show{transform:translateX(-50%) translateY(0);}
+  .timer-bar .tb-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:tbpulse 1.4s ease-in-out infinite;}
+  @keyframes tbpulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .timer-bar .tb-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;letter-spacing:1px;font-variant-numeric:tabular-nums;}
+  .timer-bar .tb-lbl{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.85;}
+  .timer-bar .tb-stop{margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;border-radius:20px;cursor:pointer;}
+  /* Bouton Commencer */
+  .start-wrap{padding:4px 20px 0;}
+  .start-btn{width:100%;padding:16px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
+  .start-btn.running{background:rgba(34,197,94,.15);color:var(--green);border:1.5px solid var(--green);}
   .validate-wrap{padding:20px;}
   .validate-btn{width:100%;padding:18px;border-radius:12px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;}
   .validate-btn.ready{background:var(--accent);color:white;}
@@ -271,6 +283,15 @@
 
 <div id="app" style="display:none">
 
+  <!-- Barre de chrono de séance -->
+  <div class="timer-bar" id="timer-bar">
+    <span class="tb-dot"></span>
+    <span class="tb-lbl">Séance</span>
+    <span class="tb-time" id="tb-time">00:00</span>
+    <button class="tb-stop" onclick="stopSession()">Arrêter</button>
+  </div>
+
+
   <!-- PAGE AUJOURD'HUI -->
   <div id="page-today" class="page active">
     <header>
@@ -288,6 +309,9 @@
 
     <div class="divider"></div>
     <div class="section-lbl">Ma séance du jour</div>
+    <div class="start-wrap">
+      <button class="start-btn" id="start-btn" onclick="startSession()">▶ Commencer la séance</button>
+    </div>
     <div class="tabs">
       <div class="tab active-haut" id="tab-haut" onclick="switchTab('haut')">💪 Haut du corps</div>
       <div class="tab" id="tab-bas" onclick="switchTab('bas')">🦵 Bas du corps</div>
@@ -851,6 +875,7 @@ function startApp(){
     switchTab(mySlot,false);
   });
   setDateBar();
+  resumeSessionIfAny();
   db.ref('crewHost').on('value',s=>{ hostName=s.val()||null; });
   db.ref('crew').on('value',s=>renderCrew(s.val()||{}));
 }
@@ -1036,6 +1061,60 @@ function switchTab(type,save=true){
   updateValidateBtn();
 }
 
+// ============================================================
+//  CHRONO DE SÉANCE — bouton Commencer + timer qui monte
+// ============================================================
+let _sessionStart=null, _sessionTimer=null;
+
+function fmtDuration(ms){
+  const tot=Math.floor(ms/1000);
+  const h=Math.floor(tot/3600), m=Math.floor((tot%3600)/60), s=tot%60;
+  const pad=n=>String(n).padStart(2,'0');
+  return h>0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function tickSession(){
+  if(_sessionStart==null) return;
+  document.getElementById('tb-time').textContent=fmtDuration(Date.now()-_sessionStart);
+}
+function startSession(){
+  if(_sessionStart!=null) return; // déjà lancée
+  _sessionStart=Date.now();
+  localStorage.setItem('anywhr-session-start', String(_sessionStart));
+  document.getElementById('timer-bar').classList.add('show');
+  const sb=document.getElementById('start-btn');
+  sb.className='start-btn running';
+  sb.innerHTML='⏱ Séance en cours…';
+  tickSession();
+  _sessionTimer=setInterval(tickSession,1000);
+}
+function stopSession(){
+  if(_sessionTimer){clearInterval(_sessionTimer);_sessionTimer=null;}
+  _sessionStart=null;
+  localStorage.removeItem('anywhr-session-start');
+  document.getElementById('timer-bar').classList.remove('show');
+  const sb=document.getElementById('start-btn');
+  if(sb){ sb.className='start-btn'; sb.innerHTML='▶ Commencer la séance'; }
+}
+// Retourne la durée écoulée (ms) puis arrête le chrono. 0 si pas lancé.
+function endSessionTimer(){
+  if(_sessionStart==null) return 0;
+  const dur=Date.now()-_sessionStart;
+  stopSession();
+  return dur;
+}
+// Reprend un chrono en cours si l'app a été rouverte
+function resumeSessionIfAny(){
+  const s=localStorage.getItem('anywhr-session-start');
+  if(s){
+    _sessionStart=parseInt(s);
+    document.getElementById('timer-bar').classList.add('show');
+    const sb=document.getElementById('start-btn');
+    if(sb){ sb.className='start-btn running'; sb.innerHTML='⏱ Séance en cours…'; }
+    tickSession();
+    _sessionTimer=setInterval(tickSession,1000);
+  }
+}
+
 function updateValidateBtn(){
   const btn=document.getElementById('validate-btn');
   if(btn.classList.contains('validated')) return;
@@ -1065,8 +1144,12 @@ async function validateSession(){
   });
   lsSet('anywhr-history',hist);
 
-  // session done marker (private, for calendar)
+  // chrono : arrête et récupère la durée de la séance
+  const durMs=endSessionTimer();
+
+  // session done marker (private, for calendar) + durée
   const sessions = lsGet('anywhr-sessions',{}); sessions[t]=mySlot; lsSet('anywhr-sessions',sessions);
+  if(durMs>0){ const durs=lsGet('anywhr-durations',{}); durs[t]=durMs; lsSet('anywhr-durations',durs); }
 
   // streak
   const room=await getRoom(); const prev=room[myName]; let streak=1;
@@ -1076,7 +1159,7 @@ async function validateSession(){
   await setMember(myName,{date:t,ts:new Date().toISOString(),slot:mySlot,streak,perf:publicPerf,uid:myUid||(prev&&prev.uid)||null});
   saveHistoryToCloud();
   btn.className='validate-btn validated'; btn.textContent='✓ Séance validée !';
-  showToast('✓ Séance validée !');
+  showToast(durMs>0 ? `✓ Séance validée ! ⏱ ${fmtDuration(durMs)}` : '✓ Séance validée !');
 }
 
 // ============================================================
