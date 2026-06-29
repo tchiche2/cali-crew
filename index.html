@@ -155,6 +155,8 @@
   .exolist-item .eli-emoji{font-size:20px;}
   .exolist-item .eli-name{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;}
   .exolist-item .eli-muscle{font-size:12px;color:var(--muted);margin-left:auto;}
+  /* Exercices verrouillés tant que la séance n'a pas commencé */
+  .locked-exos{opacity:.5;pointer-events:none;filter:saturate(.4);}
   .start-wrap{padding:4px 20px 0;}
   .start-btn{width:100%;padding:16px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
   .start-btn.running{background:rgba(34,197,94,.15);color:var(--green);border:1.5px solid var(--green);}
@@ -1051,6 +1053,7 @@ function buildSetRow(id,i,prev){
   const input=row.querySelector('.rep-input');
   input.addEventListener('input',()=>{ s.reps=input.value; saveWorkout(); });
   row.querySelector('.set-check').onclick=()=>{
+    if(_sessionStart==null){ showToast('▶ Appuie sur « Commencer la séance » d\'abord'); return; }
     s.done=!s.done;
     if(s.done && !s.reps){ s.reps=String(e.defaultReps); input.value=s.reps; }
     saveWorkout(); refreshBlock(id);
@@ -1117,6 +1120,18 @@ function openSession(type){
   document.getElementById('session-cards').style.display='none';
   document.getElementById('workout-area').style.display='block';
   document.getElementById('workout-title').textContent = type==='haut'?'💪 Haut du corps':'🦵 Bas du corps';
+  // verrouille les exos tant que la séance n'a pas démarré
+  applyLockState();
+}
+// Verrouille/déverrouille les blocs d'exercices selon l'état du chrono
+function applyLockState(){
+  const locked = _sessionStart==null;
+  ['panel-haut','panel-bas'].forEach(pid=>{
+    const p=document.getElementById(pid);
+    if(p){ p.classList.toggle('locked-exos', locked); }
+  });
+  const vb=document.getElementById('validate-btn');
+  if(vb){ vb.classList.toggle('locked-exos', locked); }
 }
 // Bouton « Changer de séance » : revient au choix des 2 cartes
 function backToChoice(){
@@ -1171,6 +1186,7 @@ function startSession(){
   sb.innerHTML='⏱ Séance en cours…';
   tickSession();
   _sessionTimer=setInterval(tickSession,1000);
+  applyLockState();
 }
 function stopSession(){
   if(_sessionTimer){clearInterval(_sessionTimer);_sessionTimer=null;}
@@ -1179,6 +1195,7 @@ function stopSession(){
   document.getElementById('timer-bar').classList.remove('show');
   const sb=document.getElementById('start-btn');
   if(sb){ sb.className='start-btn'; sb.innerHTML='▶ Commencer la séance'; }
+  applyLockState();
 }
 // Retourne la durée écoulée (ms) puis arrête le chrono. 0 si pas lancé.
 function endSessionTimer(){
@@ -1215,6 +1232,7 @@ function updateValidateBtn(){
 async function validateSession(){
   const btn=document.getElementById('validate-btn');
   if(btn.classList.contains('validated')) return;
+  if(_sessionStart==null){ showToast('▶ Commence la séance avant de la valider'); return; }
   const t=today();
   const ids = mySlot==='haut'?HAUT_IDS:BAS_IDS;
 
