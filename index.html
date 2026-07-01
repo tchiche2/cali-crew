@@ -274,6 +274,17 @@
 
   #toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0c1a10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;padding:12px 28px;border-radius:50px;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;z-index:999;}
   #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+  /* CUSTOM CONFIRM MODAL */
+  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;display:none;align-items:center;justify-content:center;padding:24px;}
+  .confirm-overlay.show{display:flex;}
+  .confirm-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 22px 18px;width:100%;max-width:340px;text-align:center;transform:scale(.92);opacity:0;transition:transform .18s ease,opacity .18s ease;}
+  .confirm-overlay.show .confirm-box{transform:scale(1);opacity:1;}
+  .confirm-msg{font-family:'Barlow',sans-serif;font-size:15px;line-height:1.4;color:var(--text);margin-bottom:20px;}
+  .confirm-actions{display:flex;gap:10px;}
+  .confirm-btn{flex:1;padding:13px;border-radius:10px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;}
+  .confirm-btn.cancel{background:none;border:1.5px solid var(--border);color:var(--dim);}
+  .confirm-btn.ok{background:var(--accent);color:#fff;}
 </style>
 </head>
 <body>
@@ -448,6 +459,15 @@
 </div>
 
 <div id="toast"></div>
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="confirm-btn cancel" id="confirm-cancel">Annuler</button>
+      <button class="confirm-btn ok" id="confirm-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
 
 <!-- MEMBER SESSION SHEET -->
 <div class="member-overlay" id="member-overlay" onclick="closeMemberSheet()"></div>
@@ -1701,25 +1721,47 @@ function fallbackCopy(text,cb){
     ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb();
   }catch(e){ prompt('Copie ce lien :',text); }
 }
-function resetUser(){
-  if(!confirm('Changer de compte ?'))return;
+function showConfirm(msg){
+  return new Promise(resolve=>{
+    const overlay=document.getElementById('confirm-overlay');
+    document.getElementById('confirm-msg').textContent=msg;
+    const okBtn=document.getElementById('confirm-ok');
+    const cancelBtn=document.getElementById('confirm-cancel');
+    const cleanup=(result)=>{
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click',onOk);
+      cancelBtn.removeEventListener('click',onCancel);
+      overlay.removeEventListener('click',onOverlay);
+      resolve(result);
+    };
+    const onOk=()=>cleanup(true);
+    const onCancel=()=>cleanup(false);
+    const onOverlay=(e)=>{ if(e.target===overlay) cleanup(false); };
+    okBtn.addEventListener('click',onOk);
+    cancelBtn.addEventListener('click',onCancel);
+    overlay.addEventListener('click',onOverlay);
+    overlay.classList.add('show');
+  });
+}
+async function resetUser(){
+  if(!await showConfirm('Changer de compte ?'))return;
   localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY);
   if(isGoogle){ auth.signOut().then(()=>location.reload()); } else location.reload();
 }
 // Host removes another member from the crew
-function hostRemove(name){
+async function hostRemove(name){
   if(myName!==hostName){ showToast("Seul l'hôte peut supprimer"); return; }
   if(name===hostName){ showToast("L'hôte ne peut pas se supprimer"); return; }
-  if(!confirm(`Retirer ${name} du Crew ?`))return;
+  if(!await showConfirm(`Retirer ${name} du Crew ?`))return;
   db.ref('crew/'+name).remove();
   showToast(`${name} retiré du Crew`);
 }
 // A member removes themselves
-function leaveCrew(name){
+async function leaveCrew(name){
   const msg = (name===hostName)
     ? "Tu es l'hôte. Si tu quittes, le rôle passera à un autre membre. Continuer ?"
     : "Te retirer du Crew ? Tes séances locales restent sur ton téléphone.";
-  if(!confirm(msg))return;
+  if(!await showConfirm(msg))return;
   db.ref('crew/'+name).remove().then(async ()=>{
     if(name===hostName){
       // pass host to next member alphabetically, or clear
