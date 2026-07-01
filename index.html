@@ -315,12 +315,6 @@
     <div id="exolist-body" style="padding:8px 4px 30px"></div>
   </div>
 
-    <span class="tb-dot"></span>
-    <span class="tb-lbl">Séance</span>
-    <span class="tb-time" id="tb-time">00:00</span>
-    <button class="tb-stop" onclick="stopSession()">Arrêter</button>
-  </div>
-
 
   <!-- PAGE AUJOURD'HUI -->
   <div id="page-today" class="page active">
@@ -417,6 +411,14 @@
     </div>
     <div id="cal-year-view" style="display:none"><div class="year-grid" id="year-grid"></div></div>
   </div>
+</div>
+
+<!-- Barre de chrono de séance (hors #app pour éviter le bug iOS de position:fixed) -->
+<div class="timer-bar" id="timer-bar">
+  <span class="tb-dot"></span>
+  <span class="tb-lbl">Séance</span>
+  <span class="tb-time" id="tb-time">00:00</span>
+  <button class="tb-stop" onclick="stopSession()">Arrêter</button>
 </div>
 
 <div id="bottom-nav">
@@ -1734,3 +1736,4 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElement
 </script>
 </body>
 </html>
+Non
