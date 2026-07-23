@@ -102,7 +102,10 @@
   /* EXERCISE BLOCKS (workout) */
   .exercises{padding:0 16px;display:flex;flex-direction:column;gap:14px;}
   .exo-block{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-  .exo-block.exo-complete{border-color:rgba(34,197,94,.4);}
+  .exo-block.exo-complete{border-color:var(--green);background:rgba(34,197,94,.12);box-shadow:0 0 0 1px rgba(34,197,94,.25) inset;}
+  .exo-block.exo-complete .exo-top{background:rgba(34,197,94,.10);}
+  .exo-block.exo-complete .exo-name{color:var(--green);}
+  .exo-block.exo-complete .sets-head{color:rgba(34,197,94,.7);}
   .exo-top{display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;}
   .exo-thumb{width:44px;height:44px;border-radius:10px;background:radial-gradient(circle at 50% 38%,#1f2433,#13161f);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;}
   .exo-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;letter-spacing:.3px;}
@@ -137,6 +140,10 @@
   /* Bouton Commencer */
   /* Cartes de choix de séance */
   .session-cards{display:flex;gap:12px;padding:4px 0;}
+  .rest-card{width:100%;margin-top:10px;padding:13px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .rest-card:active{background:var(--card);}
+  .rest-card.is-rest{border-style:solid;border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,.08);}
+  .rest-emoji{font-size:16px;}
   .session-card{flex:1;position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 14px 18px;text-align:center;cursor:pointer;transition:transform .12s,border-color .12s;}
   .session-card:active{transform:scale(.97);}
   .session-card.haut{border-top:3px solid var(--accent);}
@@ -261,6 +268,8 @@
   .cal-day.cal-done{background:rgba(34,197,94,.2);color:var(--green);}
   .cal-day.cal-done.slot-haut::after{content:'💪';position:absolute;bottom:1px;right:2px;font-size:7px;}
   .cal-day.cal-done.slot-bas::after{content:'🦵';position:absolute;bottom:1px;right:2px;font-size:7px;}
+  .cal-day.cal-rest{background:rgba(59,130,246,.15);color:#3b82f6;}
+  .cal-day.cal-rest::after{content:'🛌';position:absolute;bottom:1px;right:2px;font-size:7px;}
   .cal-day.cal-future{color:var(--muted);opacity:.3;}
   .cal-day.cal-miss{color:var(--muted);opacity:.4;}
   .year-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px 0;}
@@ -274,17 +283,6 @@
 
   #toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0c1a10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;padding:12px 28px;border-radius:50px;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;z-index:999;}
   #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
-
-  /* CUSTOM CONFIRM MODAL */
-  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;display:none;align-items:center;justify-content:center;padding:24px;}
-  .confirm-overlay.show{display:flex;}
-  .confirm-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 22px 18px;width:100%;max-width:340px;text-align:center;transform:scale(.92);opacity:0;transition:transform .18s ease,opacity .18s ease;}
-  .confirm-overlay.show .confirm-box{transform:scale(1);opacity:1;}
-  .confirm-msg{font-family:'Barlow',sans-serif;font-size:15px;line-height:1.4;color:var(--text);margin-bottom:20px;}
-  .confirm-actions{display:flex;gap:10px;}
-  .confirm-btn{flex:1;padding:13px;border-radius:10px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;}
-  .confirm-btn.cancel{background:none;border:1.5px solid var(--border);color:var(--dim);}
-  .confirm-btn.ok{background:var(--accent);color:#fff;}
 </style>
 </head>
 <body>
@@ -360,6 +358,9 @@
         <div class="sc-sub" id="sc-sub-bas"></div>
       </div>
     </div>
+    <button class="rest-card" id="rest-card" onclick="markRestDay()">
+      <span class="rest-emoji">🛌</span> Repos aujourd'hui
+    </button>
 
     <!-- Zone d'entraînement (cachée tant qu'on n'a pas choisi une séance) -->
     <div id="workout-area" style="display:none">
@@ -459,15 +460,6 @@
 </div>
 
 <div id="toast"></div>
-<div class="confirm-overlay" id="confirm-overlay">
-  <div class="confirm-box">
-    <div class="confirm-msg" id="confirm-msg"></div>
-    <div class="confirm-actions">
-      <button class="confirm-btn cancel" id="confirm-cancel">Annuler</button>
-      <button class="confirm-btn ok" id="confirm-ok">Confirmer</button>
-    </div>
-  </div>
-</div>
 
 <!-- MEMBER SESSION SHEET -->
 <div class="member-overlay" id="member-overlay" onclick="closeMemberSheet()"></div>
@@ -672,21 +664,6 @@ const EXOS = {
       "Répète pour le nombre de répétitions visé."
     ]
   },
-  b6: {
-    name: "Donkey kicks", emoji: "🦵", group: "bas",
-    target: "Fessiers",
-    variants: ["Normal", "Jambe tendue"],
-    defaultSets: 3, defaultReps: 15,
-    muscles: { primary: ["Fessiers"], secondary: ["Ischio-jambiers", "Lombaires"] },
-    highlight: { glutes:"primary", hamstrings:"secondary", lowerback:"secondary" },
-    instructions: [
-      "À quatre pattes, mains sous les épaules, genoux sous les hanches.",
-      "Pousse un talon vers le plafond, genou fléchi à 90°.",
-      "Contracte le fessier en haut du mouvement.",
-      "Redescends sans poser le genou, puis change de jambe.",
-      "Compte les répétitions par jambe."
-    ]
-  },
   b7: {
     name: "Squat isométrique", emoji: "🦵", group: "bas",
     target: "Quadriceps",
@@ -705,7 +682,7 @@ const EXOS = {
 };
 
 const HAUT_IDS = ["h1","h2","h3","h4","h5","h6","h7"];
-const BAS_IDS  = ["b1","b2","b3","b4","b5","b6","b7"];
+const BAS_IDS  = ["b1","b2","b3","b4","b5","b7"];
 
 // ============================================================
 //  ANYWHR — Moteur de l'application
@@ -946,6 +923,7 @@ function startApp(){
     loadWorkout();
     buildExerciseList('haut'); buildExerciseList('bas');
     switchTab(mySlot,false);
+    initRestCard();
   });
   setDateBar();
   resumeSessionIfAny();
@@ -1144,6 +1122,33 @@ function openSession(type){
   document.getElementById('workout-title').textContent = type==='haut'?'💪 Haut du corps':'🦵 Bas du corps';
   // verrouille les exos tant que la séance n'a pas démarré
   applyLockState();
+}
+// Reflète l'état "repos" du jour au chargement de l'app
+function initRestCard(){
+  const t=today();
+  const sessions=lsGet('anywhr-sessions',{});
+  const isRest = sessions[t]==='repos';
+  const card=document.getElementById('rest-card');
+  if(!card) return;
+  card.classList.toggle('is-rest', isRest);
+  card.innerHTML = isRest
+    ? '<span class="rest-emoji">🛌</span> Repos noté pour aujourd\'hui'
+    : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
+}
+// Marque la journée du jour comme jour de repos (pas de séries à remplir)
+function markRestDay(){
+  const t=today();
+  const sessions=lsGet('anywhr-sessions',{});
+  const already = sessions[t]==='repos';
+  if(already){ delete sessions[t]; } else { sessions[t]='repos'; }
+  lsSet('anywhr-sessions',sessions);
+  saveHistoryToCloud();
+  const card=document.getElementById('rest-card');
+  card.classList.toggle('is-rest', !already);
+  card.innerHTML = !already
+    ? '<span class="rest-emoji">🛌</span> Repos noté pour aujourd\'hui'
+    : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
+  showToast(!already ? '🛌 Journée de repos notée' : 'Repos annulé');
 }
 // Verrouille/déverrouille les blocs d'exercices selon l'état du chrono
 function applyLockState(){
@@ -1410,7 +1415,6 @@ const FDB_MAP={
   b3:'Plie_Dumbbell_Squat',
   b4:'Butt_Lift_(Bridge)',
   b5:'Flat_Bench_Lying_Leg_Raise',
-  b6:'One-Arm_Kettlebell_Swings',
   b7:'Wall_Sit'
 };
 // Construit le bloc d'images (2 photos départ/fin). Si une image manque, elle se cache,
@@ -1609,9 +1613,12 @@ function renderMonthGrid(done,t){
     if(dn<1||dn>last.getDate()){cell.className='cal-day cal-empty';}
     else{
       const dStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dn).padStart(2,'0')}`;
-      const isDone=!!done[dStr],isToday=dStr===t,isFuture=dStr>t;
+      const isRest = done[dStr]==='repos';
+      const isDone = !!done[dStr] && !isRest;
+      const isToday=dStr===t,isFuture=dStr>t;
       let cls='cal-day';
-      if(isDone)cls+=` cal-done slot-${done[dStr]}`; else if(isToday)cls+=' cal-today'; else if(isFuture)cls+=' cal-future'; else cls+=' cal-miss';
+      if(isRest) cls+=' cal-rest';
+      else if(isDone)cls+=` cal-done slot-${done[dStr]}`; else if(isToday)cls+=' cal-today'; else if(isFuture)cls+=' cal-future'; else cls+=' cal-miss';
       cell.className=cls; cell.textContent=dn;
       if(isDone){ cell.style.cursor='pointer'; cell.onclick=()=>openDaySheet(dStr, done[dStr]); }
     }
@@ -1721,47 +1728,25 @@ function fallbackCopy(text,cb){
     ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb();
   }catch(e){ prompt('Copie ce lien :',text); }
 }
-function showConfirm(msg){
-  return new Promise(resolve=>{
-    const overlay=document.getElementById('confirm-overlay');
-    document.getElementById('confirm-msg').textContent=msg;
-    const okBtn=document.getElementById('confirm-ok');
-    const cancelBtn=document.getElementById('confirm-cancel');
-    const cleanup=(result)=>{
-      overlay.classList.remove('show');
-      okBtn.removeEventListener('click',onOk);
-      cancelBtn.removeEventListener('click',onCancel);
-      overlay.removeEventListener('click',onOverlay);
-      resolve(result);
-    };
-    const onOk=()=>cleanup(true);
-    const onCancel=()=>cleanup(false);
-    const onOverlay=(e)=>{ if(e.target===overlay) cleanup(false); };
-    okBtn.addEventListener('click',onOk);
-    cancelBtn.addEventListener('click',onCancel);
-    overlay.addEventListener('click',onOverlay);
-    overlay.classList.add('show');
-  });
-}
-async function resetUser(){
-  if(!await showConfirm('Changer de compte ?'))return;
+function resetUser(){
+  if(!confirm('Changer de compte ?'))return;
   localStorage.removeItem(USER_KEY); localStorage.removeItem(SLOT_KEY);
   if(isGoogle){ auth.signOut().then(()=>location.reload()); } else location.reload();
 }
 // Host removes another member from the crew
-async function hostRemove(name){
+function hostRemove(name){
   if(myName!==hostName){ showToast("Seul l'hôte peut supprimer"); return; }
   if(name===hostName){ showToast("L'hôte ne peut pas se supprimer"); return; }
-  if(!await showConfirm(`Retirer ${name} du Crew ?`))return;
+  if(!confirm(`Retirer ${name} du Crew ?`))return;
   db.ref('crew/'+name).remove();
   showToast(`${name} retiré du Crew`);
 }
 // A member removes themselves
-async function leaveCrew(name){
+function leaveCrew(name){
   const msg = (name===hostName)
     ? "Tu es l'hôte. Si tu quittes, le rôle passera à un autre membre. Continuer ?"
     : "Te retirer du Crew ? Tes séances locales restent sur ton téléphone.";
-  if(!await showConfirm(msg))return;
+  if(!confirm(msg))return;
   db.ref('crew/'+name).remove().then(async ()=>{
     if(name===hostName){
       // pass host to next member alphabetically, or clear
