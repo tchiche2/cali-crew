@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anywhr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap');
   :root {
     --bg:#0c0e14; --card:#13161f; --border:#1e2230;
     --accent:#e8500a; --green:#22c55e; --blue:#1a7fc4;
@@ -102,7 +104,10 @@
   /* EXERCISE BLOCKS (workout) */
   .exercises{padding:0 16px;display:flex;flex-direction:column;gap:14px;}
   .exo-block{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-  .exo-block.exo-complete{border-color:rgba(34,197,94,.4);}
+  .exo-block.exo-complete{border-color:var(--green);background:rgba(34,197,94,.12);box-shadow:0 0 0 1px rgba(34,197,94,.25) inset;}
+  .exo-block.exo-complete .exo-top{background:rgba(34,197,94,.10);}
+  .exo-block.exo-complete .exo-name{color:var(--green);}
+  .exo-block.exo-complete .sets-head{color:rgba(34,197,94,.7);}
   .exo-top{display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;}
   .exo-thumb{width:44px;height:44px;border-radius:10px;background:radial-gradient(circle at 50% 38%,#1f2433,#13161f);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;}
   .exo-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;letter-spacing:.3px;}
@@ -113,14 +118,8 @@
   .variant-chip{font-family:'Barlow Condensed',sans-serif;font-size:12px;padding:6px 12px;border-radius:16px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px;}
   .variant-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(232,80,10,.1);}
 
-  .sets-head{display:grid;grid-template-columns:1fr 78px 50px;gap:8px;padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-top:1px solid var(--border);}
-  .set-row{display:flex;flex-direction:column;gap:6px;padding:8px 16px;}
-  .set-line1{display:flex;align-items:center;gap:9px;}
-  .set-line1 .set-num{font-size:14px;font-weight:700;text-align:left;min-width:14px;}
-  .set-line2{display:grid;grid-template-columns:1fr 78px 50px;gap:8px;align-items:center;}
-  .set-variant{align-self:flex-start;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.6px;padding:4px 22px 4px 10px;outline:none;cursor:pointer;text-transform:uppercase;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%235a6078' stroke-width='1.6' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 8px center;}
-  .set-variant:focus{border-color:var(--accent);color:var(--text);}
-  .set-row.done .set-variant{border-color:rgba(34,197,94,.25);color:rgba(34,197,94,.75);}
+  .sets-head{display:grid;grid-template-columns:42px 1fr 78px 50px;gap:8px;padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-top:1px solid var(--border);}
+  .set-row{display:grid;grid-template-columns:42px 1fr 78px 50px;gap:8px;padding:8px 16px;align-items:center;}
   .set-row.done{background:#16241b;}
   .set-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;color:var(--muted);text-align:center;}
   .set-row.done .set-num{color:var(--green);}
@@ -143,6 +142,10 @@
   /* Bouton Commencer */
   /* Cartes de choix de séance */
   .session-cards{display:flex;gap:12px;padding:4px 0;}
+  .rest-card{width:100%;margin-top:10px;padding:13px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .rest-card:active{background:var(--card);}
+  .rest-card.is-rest{border-style:solid;border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,.08);}
+  .rest-emoji{font-size:16px;}
   .session-card{flex:1;position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 14px 18px;text-align:center;cursor:pointer;transition:transform .12s,border-color .12s;}
   .session-card:active{transform:scale(.97);}
   .session-card.haut{border-top:3px solid var(--accent);}
@@ -267,6 +270,8 @@
   .cal-day.cal-done{background:rgba(34,197,94,.2);color:var(--green);}
   .cal-day.cal-done.slot-haut::after{content:'💪';position:absolute;bottom:1px;right:2px;font-size:7px;}
   .cal-day.cal-done.slot-bas::after{content:'🦵';position:absolute;bottom:1px;right:2px;font-size:7px;}
+  .cal-day.cal-rest{background:rgba(59,130,246,.15);color:#3b82f6;}
+  .cal-day.cal-rest::after{content:'🛌';position:absolute;bottom:1px;right:2px;font-size:7px;}
   .cal-day.cal-future{color:var(--muted);opacity:.3;}
   .cal-day.cal-miss{color:var(--muted);opacity:.4;}
   .year-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px 0;}
@@ -355,6 +360,9 @@
         <div class="sc-sub" id="sc-sub-bas"></div>
       </div>
     </div>
+    <button class="rest-card" id="rest-card" onclick="markRestDay()">
+      <span class="rest-emoji">🛌</span> Repos aujourd'hui
+    </button>
 
     <!-- Zone d'entraînement (cachée tant qu'on n'a pas choisi une séance) -->
     <div id="workout-area" style="display:none">
@@ -658,21 +666,6 @@ const EXOS = {
       "Répète pour le nombre de répétitions visé."
     ]
   },
-  b6: {
-    name: "Donkey kicks", emoji: "🦵", group: "bas",
-    target: "Fessiers",
-    variants: ["Normal", "Jambe tendue"],
-    defaultSets: 3, defaultReps: 15,
-    muscles: { primary: ["Fessiers"], secondary: ["Ischio-jambiers", "Lombaires"] },
-    highlight: { glutes:"primary", hamstrings:"secondary", lowerback:"secondary" },
-    instructions: [
-      "À quatre pattes, mains sous les épaules, genoux sous les hanches.",
-      "Pousse un talon vers le plafond, genou fléchi à 90°.",
-      "Contracte le fessier en haut du mouvement.",
-      "Redescends sans poser le genou, puis change de jambe.",
-      "Compte les répétitions par jambe."
-    ]
-  },
   b7: {
     name: "Squat isométrique", emoji: "🦵", group: "bas",
     target: "Quadriceps",
@@ -691,7 +684,7 @@ const EXOS = {
 };
 
 const HAUT_IDS = ["h1","h2","h3","h4","h5","h6","h7"];
-const BAS_IDS  = ["b1","b2","b3","b4","b5","b6","b7"];
+const BAS_IDS  = ["b1","b2","b3","b4","b5","b7"];
 
 // ============================================================
 //  ANYWHR — Moteur de l'application
@@ -932,6 +925,7 @@ function startApp(){
     loadWorkout();
     buildExerciseList('haut'); buildExerciseList('bas');
     switchTab(mySlot,false);
+    initRestCard();
   });
   setDateBar();
   resumeSessionIfAny();
@@ -976,27 +970,14 @@ async function setMember(name,data){ await db.ref('crew/'+name).set(data); }
 // ============================================================
 function loadWorkout(){
   const saved = lsGet('anywhr-workout-'+today(), null);
-  if(saved){ workout = migrateWorkout(saved); return; }
+  if(saved){ workout = saved; return; }
   // init fresh
   workout = {};
   [...HAUT_IDS,...BAS_IDS].forEach(id=>{
     const e=EXOS[id];
-    const dv = defaultVariant(e);
-    workout[id]={ sets: Array.from({length:e.defaultSets},()=>({variant:dv,reps:'',done:false})) };
+    workout[id]={ variant: e.variants.length>1?e.variants[1]||e.variants[0]:e.variants[0],
+      sets: Array.from({length:e.defaultSets},()=>({reps:'',done:false})) };
   });
-}
-// Variante par défaut d'un exercice (2e de la liste si dispo, sinon la 1re)
-function defaultVariant(e){ return e.variants.length>1 ? (e.variants[1]||e.variants[0]) : e.variants[0]; }
-// Convertit un ancien enregistrement (variante globale) vers le nouveau format (variante par série)
-function migrateWorkout(w){
-  Object.keys(w).forEach(id=>{
-    const e=EXOS[id]; if(!e) return;
-    const dv = defaultVariant(e);
-    const oldVar = w[id].variant; // ancienne variante globale éventuelle
-    (w[id].sets||[]).forEach(s=>{ if(s.variant==null) s.variant = oldVar || dv; });
-    delete w[id].variant;
-  });
-  return w;
 }
 function saveWorkout(){ lsSet('anywhr-workout-'+today(), workout); }
 
@@ -1009,6 +990,7 @@ function buildExerciseList(group){
 
 function buildExoBlock(id){
   const e=EXOS[id], w=workout[id];
+  const prev = getLastPerf(id); // {variant, sets:[reps...]} or null
   const block=document.createElement('div');
   block.className='exo-block';
   block.id='block-'+id;
@@ -1021,29 +1003,40 @@ function buildExoBlock(id){
     <button class="exo-info-btn" onclick="openSheet('${id}');event.stopPropagation();">i</button>`;
   block.appendChild(top);
 
+  // variants
+  if(e.variants.length>1){
+    const vr=document.createElement('div'); vr.className='variant-row';
+    e.variants.forEach(v=>{
+      const chip=document.createElement('button');
+      chip.className='variant-chip'+(w.variant===v?' active':'');
+      chip.textContent=v;
+      chip.onclick=()=>{ w.variant=v; saveWorkout();
+        vr.querySelectorAll('.variant-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active'); };
+      vr.appendChild(chip);
+    });
+    block.appendChild(vr);
+  }
+
   // sets head
   const unit = e.unit==='sec'?'Sec':'Reps';
   const head=document.createElement('div'); head.className='sets-head';
-  head.innerHTML=`<div>Précédent</div><div style="text-align:center">${unit}</div><div style="text-align:center">✓</div>`;
+  head.innerHTML=`<div style="text-align:center">Série</div><div>Précédent</div><div style="text-align:center">${unit}</div><div style="text-align:center">✓</div>`;
   block.appendChild(head);
 
-  // set rows — chaque série a sa propre variante
-  w.sets.forEach((s,i)=>block.appendChild(buildSetRow(id,i)));
+  // set rows
+  w.sets.forEach((s,i)=>block.appendChild(buildSetRow(id,i,prev)));
 
-  // add set — reprend la variante de la dernière série
+  // add set
   const add=document.createElement('button'); add.className='add-set'; add.textContent='+ Ajouter une série';
-  add.onclick=()=>{
-    const last = w.sets[w.sets.length-1];
-    w.sets.push({variant:(last?last.variant:defaultVariant(e)),reps:'',done:false});
-    saveWorkout(); refreshBlock(id);
-  };
+  add.onclick=()=>{ w.sets.push({reps:'',done:false}); saveWorkout(); refreshBlock(id); };
   block.appendChild(add);
 
   updateBlockComplete(block,id);
   return block;
 }
 
-function buildSetRow(id,i){
+function buildSetRow(id,i,prev){
   const e=EXOS[id], s=workout[id].sets[i];
   const wrap=document.createElement('div');
   wrap.className='set-row-wrap';
@@ -1054,38 +1047,14 @@ function buildSetRow(id,i){
 
   const row=document.createElement('div');
   row.className='set-row'+(s.done?' done':'');
-
-  // ── LIGNE 1 : numéro de série + sélecteur de variante ──
-  const line1=document.createElement('div'); line1.className='set-line1';
-  const num=document.createElement('div'); num.className='set-num'; num.textContent=i+1;
-  line1.appendChild(num);
-  if(e.variants.length>1){
-    const sel=document.createElement('select'); sel.className='set-variant';
-    e.variants.forEach(v=>{
-      const o=document.createElement('option'); o.value=v; o.textContent=v;
-      if(s.variant===v) o.selected=true;
-      sel.appendChild(o);
-    });
-    sel.onchange=()=>{
-      s.variant=sel.value; saveWorkout();
-      prevEl.textContent=setPrevText(id,i); // met à jour le "précédent" selon la variante choisie
-    };
-    line1.appendChild(sel);
-  }
-  row.appendChild(line1);
-
-  // ── LIGNE 2 : précédent + reps + validation ──
-  const line2=document.createElement('div'); line2.className='set-line2';
-  const prevEl=document.createElement('div'); prevEl.className='set-prev'; prevEl.textContent=setPrevText(id,i);
-  const input=document.createElement('input');
-  input.className='rep-input'; input.setAttribute('inputmode','numeric');
-  input.value=s.reps; input.placeholder=e.defaultReps;
-  const check=document.createElement('button'); check.className='set-check'; check.textContent='✓';
-  line2.append(prevEl,input,check);
-  row.appendChild(line2);
-
+  const prevTxt = prev&&prev.sets[i]!=null ? `${prev.sets[i]} ${e.unit==='sec'?'sec':'reps'}` : '—';
+  row.innerHTML=`<div class="set-num">${i+1}</div>
+    <div class="set-prev">${prevTxt}</div>
+    <input class="rep-input" inputmode="numeric" value="${s.reps}" placeholder="${e.defaultReps}">
+    <button class="set-check">✓</button>`;
+  const input=row.querySelector('.rep-input');
   input.addEventListener('input',()=>{ s.reps=input.value; saveWorkout(); });
-  check.onclick=()=>{
+  row.querySelector('.set-check').onclick=()=>{
     if(_sessionStart==null){ showToast('▶ Appuie sur « Commencer la séance » d\'abord'); return; }
     s.done=!s.done;
     if(s.done && !s.reps){ s.reps=String(e.defaultReps); input.value=s.reps; }
@@ -1096,8 +1065,7 @@ function buildSetRow(id,i){
   let startX=0, curX=0, dragging=false;
   const THRESH=70;
   row.addEventListener('touchstart',ev=>{
-    // laisse la saisie et le menu variante fonctionner sans déclencher le swipe
-    if(ev.target.classList.contains('rep-input')||ev.target.classList.contains('set-variant')) return;
+    if(ev.target.classList.contains('rep-input')) return; // let typing work
     startX=ev.touches[0].clientX; dragging=true; row.style.transition='none';
   },{passive:true});
   row.addEventListener('touchmove',ev=>{
@@ -1125,12 +1093,6 @@ function deleteSet(id,i){
   if(workout[id].sets.length<=1){ refreshBlock(id); showToast('Au moins une série requise'); return; }
   workout[id].sets.splice(i,1);
   saveWorkout(); refreshBlock(id);
-}
-// Texte "précédent" d'une série, basé sur sa variante
-function setPrevText(id,i){
-  const e=EXOS[id], s=workout[id].sets[i];
-  const prev=getLastPerf(id, s.variant);
-  return (prev && prev.sets[i]!=null) ? `${prev.sets[i]} ${e.unit==='sec'?'sec':'reps'}` : '—';
 }
 
 function refreshBlock(id){
@@ -1162,6 +1124,33 @@ function openSession(type){
   document.getElementById('workout-title').textContent = type==='haut'?'💪 Haut du corps':'🦵 Bas du corps';
   // verrouille les exos tant que la séance n'a pas démarré
   applyLockState();
+}
+// Reflète l'état "repos" du jour au chargement de l'app
+function initRestCard(){
+  const t=today();
+  const sessions=lsGet('anywhr-sessions',{});
+  const isRest = sessions[t]==='repos';
+  const card=document.getElementById('rest-card');
+  if(!card) return;
+  card.classList.toggle('is-rest', isRest);
+  card.innerHTML = isRest
+    ? '<span class="rest-emoji">🛌</span> Repos noté pour aujourd\'hui'
+    : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
+}
+// Marque la journée du jour comme jour de repos (pas de séries à remplir)
+function markRestDay(){
+  const t=today();
+  const sessions=lsGet('anywhr-sessions',{});
+  const already = sessions[t]==='repos';
+  if(already){ delete sessions[t]; } else { sessions[t]='repos'; }
+  lsSet('anywhr-sessions',sessions);
+  saveHistoryToCloud();
+  const card=document.getElementById('rest-card');
+  card.classList.toggle('is-rest', !already);
+  card.innerHTML = !already
+    ? '<span class="rest-emoji">🛌</span> Repos noté pour aujourd\'hui'
+    : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
+  showToast(!already ? '🛌 Journée de repos notée' : 'Repos annulé');
 }
 // Verrouille/déverrouille les blocs d'exercices selon l'état du chrono
 function applyLockState(){
@@ -1281,19 +1270,11 @@ async function validateSession(){
   const publicPerf = []; // [{name, variant, sets}]
   ids.forEach(id=>{
     const w=workout[id];
-    const done=w.sets.filter(s=>s.done);
-    if(done.length===0) return;
-    // regroupe les séries validées par variante (progression suivie par variante)
-    const byVar={};
-    done.forEach(s=>{
-      const v=s.variant||EXOS[id].variants[0];
-      (byVar[v]=byVar[v]||[]).push(parseInt(s.reps)||0);
-    });
+    const doneSets = w.sets.filter(s=>s.done).map(s=>parseInt(s.reps)||0);
+    if(doneSets.length===0) return;
     if(!hist[id]) hist[id]=[];
-    Object.keys(byVar).forEach(v=>{
-      hist[id].push({date:t, variant:v, sets:byVar[v]});
-      publicPerf.push({ n:EXOS[id].name, v:v, s:byVar[v], u:EXOS[id].unit||'reps' });
-    });
+    hist[id].push({date:t, variant:w.variant, sets:doneSets});
+    publicPerf.push({ n:EXOS[id].name, v:w.variant, s:doneSets, u:EXOS[id].unit||'reps' });
   });
   lsSet('anywhr-history',hist);
 
@@ -1391,13 +1372,10 @@ function renderCrew(room){
 // ============================================================
 //  FICHE EXERCICE (sheet) — 4 onglets
 // ============================================================
-function getLastPerf(id, variant){
+function getLastPerf(id){
   const hist=lsGet('anywhr-history',{});
-  const arr=hist[id]||[];
-  for(let k=arr.length-1;k>=0;k--){
-    if(!variant || arr[k].variant===variant) return arr[k];
-  }
-  return null;
+  if(!hist[id]||!hist[id].length) return null;
+  return hist[id][hist[id].length-1];
 }
 function openSheet(id){
   currentSheetExo=id;
@@ -1439,7 +1417,6 @@ const FDB_MAP={
   b3:'Plie_Dumbbell_Squat',
   b4:'Butt_Lift_(Bridge)',
   b5:'Flat_Bench_Lying_Leg_Raise',
-  b6:'One-Arm_Kettlebell_Swings',
   b7:'Wall_Sit'
 };
 // Construit le bloc d'images (2 photos départ/fin). Si une image manque, elle se cache,
@@ -1638,9 +1615,12 @@ function renderMonthGrid(done,t){
     if(dn<1||dn>last.getDate()){cell.className='cal-day cal-empty';}
     else{
       const dStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dn).padStart(2,'0')}`;
-      const isDone=!!done[dStr],isToday=dStr===t,isFuture=dStr>t;
+      const isRest = done[dStr]==='repos';
+      const isDone = !!done[dStr] && !isRest;
+      const isToday=dStr===t,isFuture=dStr>t;
       let cls='cal-day';
-      if(isDone)cls+=` cal-done slot-${done[dStr]}`; else if(isToday)cls+=' cal-today'; else if(isFuture)cls+=' cal-future'; else cls+=' cal-miss';
+      if(isRest) cls+=' cal-rest';
+      else if(isDone)cls+=` cal-done slot-${done[dStr]}`; else if(isToday)cls+=' cal-today'; else if(isFuture)cls+=' cal-future'; else cls+=' cal-miss';
       cell.className=cls; cell.textContent=dn;
       if(isDone){ cell.style.cursor='pointer'; cell.onclick=()=>openDaySheet(dStr, done[dStr]); }
     }
