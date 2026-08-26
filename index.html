@@ -88,6 +88,7 @@
   .m-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;}
   .m-status{font-size:12px;color:var(--muted);margin-top:2px;}
   .m-status.ok{color:var(--green);}
+  .m-status.rest{color:#3b82f6;}
   .m-perf{font-size:11px;color:var(--blue);margin-top:3px;line-height:1.4;}
   .m-time{font-size:11px;color:var(--muted);}
   .me-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--accent);background:rgba(232,80,10,.12);border-radius:6px;padding:2px 8px;letter-spacing:1px;}
@@ -530,21 +531,6 @@ const EXOS = {
       "Répète pour le nombre de répétitions visé."
     ]
   },
-  h4: {
-    name: "Pike push-ups", emoji: "💪", group: "haut",
-    target: "Épaules",
-    variants: ["Normal", "Pieds surélevés"],
-    defaultSets: 3, defaultReps: 8,
-    muscles: { primary: ["Deltoïdes"], secondary: ["Triceps", "Trapèzes"] },
-    highlight: { deltoid:"primary", triceps:"secondary", traps:"secondary" },
-    instructions: [
-      "Position en V inversé : fesses hautes, mains et pieds au sol, corps en triangle.",
-      "Descends la tête vers le sol entre les mains en pliant les coudes.",
-      "Garde les fesses hautes pour cibler les épaules.",
-      "Pousse pour remonter, bras tendus.",
-      "Répète pour le nombre de répétitions visé."
-    ]
-  },
   h5: {
     name: "Superman", emoji: "💪", group: "haut",
     target: "Bas du dos",
@@ -683,7 +669,7 @@ const EXOS = {
   }
 };
 
-const HAUT_IDS = ["h1","h2","h3","h4","h5","h6","h7"];
+const HAUT_IDS = ["h1","h2","h3","h5","h6","h7"];
 const BAS_IDS  = ["b1","b2","b3","b4","b5","b7"];
 
 // ============================================================
@@ -1138,19 +1124,29 @@ function initRestCard(){
     : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
 }
 // Marque la journée du jour comme jour de repos (pas de séries à remplir)
-function markRestDay(){
+async function markRestDay(){
   const t=today();
   const sessions=lsGet('anywhr-sessions',{});
   const already = sessions[t]==='repos';
   if(already){ delete sessions[t]; } else { sessions[t]='repos'; }
   lsSet('anywhr-sessions',sessions);
   saveHistoryToCloud();
+
+  // publie (ou retire) le statut repos pour que le Crew le voie
+  const room=await getRoom(); const prev=room[myName];
+  if(!already){
+    await setMember(myName,{date:t,ts:new Date().toISOString(),slot:'repos',streak:(prev&&prev.streak)||0,perf:null,uid:myUid||(prev&&prev.uid)||null});
+  } else if(prev && prev.date===t && prev.slot==='repos'){
+    // on annule : on efface le marqueur du jour (redevient "pas encore fait")
+    await setMember(myName,{date:'',ts:'',slot:'',streak:(prev&&prev.streak)||0,perf:null,uid:myUid||(prev&&prev.uid)||null});
+  }
+
   const card=document.getElementById('rest-card');
   card.classList.toggle('is-rest', !already);
   card.innerHTML = !already
     ? '<span class="rest-emoji">🛌</span> Repos noté pour aujourd\'hui'
     : '<span class="rest-emoji">🛌</span> Repos aujourd\'hui';
-  showToast(!already ? '🛌 Journée de repos notée' : 'Repos annulé');
+  showToast(!already ? 'Journée de repos notée' : 'Repos annulé');
 }
 // Verrouille/déverrouille les blocs d'exercices selon l'état du chrono
 function applyLockState(){
@@ -1309,19 +1305,22 @@ function renderCrew(room){
   const boostNames=[];
 
   order.forEach((name,idx)=>{
-    const entry=room[name]; const done=entry&&entry.date===t; const isMe=name===myName;
+    const entry=room[name]; const done=entry&&entry.date===t; const isRest=done&&entry.slot==='repos';
+    const isWorkoutDone=done&&!isRest; const isMe=name===myName;
     const col=COLORS[idx%COLORS.length];
-    if(!isMe&&done) boostNames.push(name);
+    if(!isMe&&isWorkoutDone) boostNames.push(name);
 
     const row=document.createElement('div');
-    row.className='member-row'+(isMe?' is-me':'')+(done?' m-done':'');
+    row.className='member-row'+(isMe?' is-me':'')+(isWorkoutDone?' m-done':'')+(isRest?' m-rest':'');
     const av=document.createElement('div'); av.className='m-av';
-    av.style.cssText=`background:${done?'rgba(34,197,94,.15)':col.bg};color:${done?'var(--green)':col.fg};border:2px solid ${done?'var(--green)':col.fg};`;
-    av.textContent=done?'✓':name[0].toUpperCase();
+    const avColor = isWorkoutDone?'var(--green)':(isRest?'#3b82f6':col.fg);
+    const avBg = isWorkoutDone?'rgba(34,197,94,.15)':(isRest?'rgba(59,130,246,.15)':col.bg);
+    av.style.cssText=`background:${avBg};color:${avColor};border:2px solid ${avColor};`;
+    av.textContent=isWorkoutDone?'✓':(isRest?'—':name[0].toUpperCase());
 
     const info=document.createElement('div'); info.className='m-info';
     let perfHtml='';
-    if(done && entry.perf && entry.perf.length){
+    if(isWorkoutDone && entry.perf && entry.perf.length){
       const lines=entry.perf.slice(0,3).map(p=>{
         const setsTxt=p.s.join('-');
         const vTxt = p.v && p.v!=='Normal' ? ` (${p.v})` : '';
@@ -1330,11 +1329,15 @@ function renderCrew(room){
       let more = entry.perf.length>3 ? ` +${entry.perf.length-3} autres` : '';
       perfHtml=`<div class="m-perf">${lines.join('<br>')}${more}</div>`;
     }
+    let statusTxt;
+    if(isWorkoutDone) statusTxt='Séance validée 💪';
+    else if(isRest) statusTxt='Repos aujourd\'hui';
+    else statusTxt = isMe?'Pas encore fait':'En attente…';
     info.innerHTML=`<div class="m-name">${name}${name===hostName?'<span class="host-tag">HÔTE</span>':''}</div>
-      <div class="m-status${done?' ok':''}">${done?'Séance validée 💪':(isMe?'Pas encore fait':'En attente…')}</div>
-      ${done&&entry.ts?`<div class="m-time">${fmtTime(entry.ts)}</div>`:''}
+      <div class="m-status${isWorkoutDone?' ok':''}${isRest?' rest':''}">${statusTxt}</div>
+      ${isWorkoutDone&&entry.ts?`<div class="m-time">${fmtTime(entry.ts)}</div>`:''}
       ${perfHtml}`;
-    if(done && entry.perf && entry.perf.length){
+    if(isWorkoutDone && entry.perf && entry.perf.length){
       info.style.cursor='pointer';
       info.onclick=()=>openMemberSheet(name);
       const hint=document.createElement('div'); hint.className='m-tap-hint'; hint.textContent='Voir la séance ›';
@@ -1408,7 +1411,6 @@ const FDB_MAP={
   h1:'Pushups',
   h2:'Close-Grip_Push-Up_off_of_a_Dumbbell',
   h3:'Push-Up_Wide',
-  h4:'Pike_Push-Up',
   h5:'Superman',
   h6:'Plank',
   h7:'Side_Bridge',
